@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <rect width="512" height="512" fill="#1E6E70"/>
+  <path d="M150 96 H362 V300 C362 372 306 414 256 440 C206 414 150 372 150 300 Z"
+        fill="none" stroke="#C9A227" stroke-width="14"/>
+  <text x="256" y="300" text-anchor="middle" font-family="'Bodoni Moda', Georgia, serif"
+        font-style="italic" font-weight="400" font-size="180" fill="#F2FAF8">Bc</text>
+  <text x="256" y="372" text-anchor="middle" font-family="'Bodoni Moda', Georgia, serif"
+        font-weight="400" font-size="44" letter-spacing="6" fill="#C9A227">2026</text>
+</svg>

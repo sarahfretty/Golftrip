@@ -1,0 +1,91 @@
+/*
+ * Design tokens — The Belek Cup 2026.
+ *
+ * The event's own colourway (turquoise / gold / sea-glass / charcoal) expressed as the
+ * Modernist system: flat, architectural, 2px rules, zero radius. Every colour, space and
+ * font in the app reads from here — no hard-coded hexes in components. A second event
+ * restyles by overriding these tokens, not by touching components.
+ */
+
+:root {
+  /* ── Brand: turquoise ramp ─────────────────────────────── */
+  --teal-900: #123f41;
+  --teal-800: #175557;
+  --teal-700: #1e6e70; /* primary brand / CTA */
+  --teal-600: #2b8482;
+  --teal-500: #3e9e9b; /* bright accent, links (hover) */
+  --teal-400: #6bb3ae;
+  --teal-300: #8fb3ae; /* muted labels on light */
+  --teal-200: #a8d5cf;
+  --teal-100: #cde3de; /* hairline borders */
+  --teal-50: #d9ede8; /* tinted fills, chips */
+
+  /* ── Brand: gold ramp (a promise, not decoration) ──────── */
+  --gold-700: #a98618; /* pressed */
+  --gold-600: #c9a227; /* base gold */
+  --gold-500: #e3c778; /* light gold, on dark */
+  --gold-50: #faf6ee; /* faint gold tint (winner row) */
+
+  /* ── Ink & ground ──────────────────────────────────────── */
+  --charcoal: #24343a; /* ink / dark surfaces */
+  --glass: #f2faf8; /* app background (sea glass) */
+  --white: #ffffff;
+
+  /* ── Neutral ramp ──────────────────────────────────────── */
+  --neutral-900: #24343a;
+  --neutral-700: #4a5a60;
+  --neutral-600: #6b7b80;
+  --neutral-500: #8fb3ae;
+  --neutral-300: #cde3de;
+  --neutral-200: #e2efec;
+  --neutral-100: #eef6f4;
+
+  /* ── Semantic roles ────────────────────────────────────── */
+  --color-bg: var(--glass);
+  --color-surface: var(--white);
+  --color-text: var(--charcoal);
+  --color-text-muted: var(--neutral-600);
+  --color-text-faint: var(--teal-300);
+  --color-primary: var(--teal-700);
+  --color-primary-press: var(--teal-800);
+  --color-accent: var(--teal-500);
+  --color-gold: var(--gold-600);
+  --color-divider: var(--charcoal); /* strong 2px rules */
+  --color-hairline: var(--teal-100); /* 1px light rules */
+  --color-danger: #b3261e;
+  --color-success: var(--teal-700);
+  --color-link: var(--teal-700);
+  --color-link-hover: var(--teal-500);
+
+  /* Dark header/section surface + text on it */
+  --color-on-dark: var(--glass);
+  --color-on-dark-kicker: var(--teal-200);
+  --color-on-dark-gold: var(--gold-500);
+
+  /* ── Type ──────────────────────────────────────────────── */
+  --font-heading: "Archivo", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-body: "Archivo", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-display: "Bodoni Moda", "Times New Roman", serif; /* the event's editorial voice */
+
+  /* ── Spacing scale (density 1.0) ───────────────────────── */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-10: 40px;
+  --space-12: 48px;
+
+  /* ── Radius: zero, on purpose ──────────────────────────── */
+  --radius: 0px;
+
+  /* ── Elevation (tuned to the sea-glass ground) ─────────── */
+  --shadow-sm: 0 1px 2px rgba(36, 52, 58, 0.08);
+  --shadow-md: 0 4px 14px rgba(36, 52, 58, 0.12);
+
+  /* ── Layout ────────────────────────────────────────────── */
+  --app-max: 430px; /* mobile-first single column */
+  --tabbar-h: 64px;
+}

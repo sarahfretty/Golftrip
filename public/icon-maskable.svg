@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <!-- Full-bleed teal so the platform mask always crops onto brand colour; crest sits in the safe zone. -->
+  <rect width="512" height="512" fill="#1E6E70"/>
+  <path d="M182 150 H330 V292 C330 342 291 371 256 389 C221 371 182 342 182 292 Z"
+        fill="none" stroke="#C9A227" stroke-width="11"/>
+  <text x="256" y="300" text-anchor="middle" font-family="'Bodoni Moda', Georgia, serif"
+        font-style="italic" font-weight="400" font-size="120" fill="#F2FAF8">Bc</text>
+</svg>
