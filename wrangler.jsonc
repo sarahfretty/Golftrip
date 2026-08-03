@@ -1,0 +1,15 @@
+{
+  // Cloudflare Workers Static Assets config — deploys the built SPA in ./dist.
+  // Docs: https://developers.cloudflare.com/workers/static-assets/
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "golftrip",
+  "compatibility_date": "2025-06-01",
+  "assets": {
+    "directory": "./dist",
+    // Serve index.html for client-side routes (deep links like /cup, /score/r1).
+    "not_found_handling": "single-page-application"
+  },
+  "observability": {
+    "enabled": true
+  }
+}
