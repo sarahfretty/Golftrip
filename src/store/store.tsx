@@ -92,22 +92,35 @@ function initialState(): EventState {
 }
 
 function loadState(): EventState {
+  const base = initialState();
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
-    if (!raw) return initialState();
+    if (!raw) return base;
     const parsed = JSON.parse(raw) as Partial<EventState>;
-    // Merge over defaults so new seed rounds/groups appear even for older saved state.
-    const base = initialState();
+    // Merge BY ID against the seed so newly-added rounds/groups/courses always appear,
+    // while preserving anything the organiser has changed (status, scorer, teams, scores).
+    const rounds = base.rounds.map((r) => {
+      const saved = parsed.rounds?.find((x) => x.id === r.id);
+      return saved ? { ...r, status: saved.status } : r;
+    });
+    const teeGroups = base.teeGroups.map((g) => {
+      const saved = parsed.teeGroups?.find((x) => x.id === g.id);
+      return saved ? { ...g, scorerId: saved.scorerId } : g;
+    });
+    const teams = base.teams.map((t) => {
+      const saved = parsed.teams?.find((x) => x.id === t.id);
+      return saved ? { ...t, playerIds: saved.playerIds } : t;
+    });
     return {
-      rounds: parsed.rounds ?? base.rounds,
-      teams: parsed.teams ?? base.teams,
-      teeGroups: parsed.teeGroups ?? base.teeGroups,
+      rounds,
+      teams,
+      teeGroups,
       scorecards: parsed.scorecards ?? base.scorecards,
       sidePrizes: parsed.sidePrizes ?? base.sidePrizes,
       announcements: parsed.announcements ?? base.announcements,
     };
   } catch {
-    return initialState();
+    return base;
   }
 }
 
