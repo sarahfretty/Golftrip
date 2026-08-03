@@ -50,6 +50,7 @@ import {
   playingHandicap,
   shotsMap,
   teamStandings,
+  teePar,
   type StandingRow,
   type TeamStandingRow,
 } from "../domain/scoring";
@@ -192,7 +193,8 @@ export function EventProvider({ children }: { children: ReactNode }) {
       if (!course) return null;
       const tee = course.tees.find((t) => t.gender === player.gender);
       if (!tee) return null;
-      return playingHandicap(player.index, tee, course.par, EVENT.allowance);
+      // Use the tee's own par (men and ladies can play different pars, e.g. Wheatley).
+      return playingHandicap(player.index, tee, teePar(tee), EVENT.allowance);
     },
     [state.rounds, getPlayer, getCourse],
   );
@@ -247,9 +249,11 @@ export function EventProvider({ children }: { children: ReactNode }) {
   const roundTotalsByPlayer = useCallback(
     (gender: "M" | "F"): Record<string, number[]> => {
       const field = PLAYERS.filter((p) => p.competing && p.gender === gender);
+      // Only competition rounds count — the warm-up (demo) round is excluded.
+      const compRounds = state.rounds.filter((r) => !r.demo);
       const result: Record<string, number[]> = {};
       for (const p of field) {
-        result[p.id] = state.rounds.map((r) => pointsFor(r.id, p.id));
+        result[p.id] = compRounds.map((r) => pointsFor(r.id, p.id));
       }
       return result;
     },

@@ -10,6 +10,7 @@ import {
   bestNTotal,
   orderOfMerit,
   teamStandings,
+  teePar,
   validateHoles,
   validateTeams,
 } from "./scoring";
@@ -165,12 +166,42 @@ describe("course data validation", () => {
   for (const course of COURSES) {
     for (const tee of course.tees) {
       it(`${course.name} (${tee.tee}) has valid SIs and pars`, () => {
-        const result = validateHoles(tee.holes, course.par);
+        // Validate each tee against its own par (a course can differ per tee, e.g. Wheatley).
+        const result = validateHoles(tee.holes, teePar(tee));
         expect(result.errors).toEqual([]);
         expect(result.ok).toBe(true);
       });
     }
   }
+});
+
+describe("Wheatley Golf Club — per-tee pars and official 95% handicaps", () => {
+  const wheatley = COURSES.find((c) => c.id === "wheatley")!;
+  const yellow = wheatley.tees.find((t) => t.gender === "M")!;
+  const red = wheatley.tees.find((t) => t.gender === "F")!;
+
+  it("men play par 71 off yellow, ladies par 74 off red", () => {
+    expect(teePar(yellow)).toBe(71);
+    expect(teePar(red)).toBe(74);
+  });
+
+  // Expected playing handicaps read straight from the club's England Golf 95% tables.
+  const ph = (tee: typeof yellow, index: number) => playingHandicap(index, tee, teePar(tee), 0.95);
+
+  it("Men's Yellow (CR 71.0 / Slope 129) reproduces the table", () => {
+    expect(ph(yellow, 0.0)).toBe(0);
+    expect(ph(yellow, 5.0)).toBe(5);
+    expect(ph(yellow, 10.0)).toBe(11);
+    expect(ph(yellow, 14.8)).toBe(16);
+    expect(ph(yellow, 20.0)).toBe(22);
+  });
+
+  it("Women's Red (CR 74.5 / Slope 139) reproduces the table", () => {
+    expect(ph(red, 10.0)).toBe(12);
+    expect(ph(red, 15.0)).toBe(18);
+    expect(ph(red, 20.0)).toBe(24);
+    expect(ph(red, 36.0)).toBe(43);
+  });
 });
 
 describe("team balance validation", () => {

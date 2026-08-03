@@ -13,6 +13,12 @@ import type {
 
 export const DEFAULT_ALLOWANCE = 0.95;
 
+/** Par of a tee = sum of its holes' pars. Used in the Course Handicap formula, since a
+ *  course can have different pars per tee (e.g. Wheatley: men 71, ladies 74). */
+export function teePar(tee: { holes: Hole[] }): number {
+  return tee.holes.reduce((sum, h) => sum + h.par, 0);
+}
+
 /**
  * Course Handicap = Index × (Slope ÷ 113) + (Course Rating − Par).
  * Unrounded — the allowance is applied before rounding.

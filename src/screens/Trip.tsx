@@ -7,7 +7,8 @@ export function Trip() {
   const ev = useEvent();
   const { flights, hotel } = ev.event;
   const teamsPicked = ev.teams.some((t) => t.playerIds.length > 0);
-  const firstRound = ev.rounds[0];
+  const rounds = ev.rounds.filter((r) => !r.demo); // the Turkey itinerary — not the warm-up
+  const firstRound = rounds[0];
 
   return (
     <div className="screen">
@@ -36,7 +37,7 @@ export function Trip() {
 
       <div className="sec"><div className="sec-label">Itinerary</div></div>
       <div className="rows">
-        {ev.rounds.map((r) => {
+        {rounds.map((r) => {
           const c = ev.getCourse(r.courseId);
           return (
             <div key={r.id} className="row">
@@ -62,14 +63,14 @@ export function Trip() {
         <div className="row">
           <div>
             <div className="pname">{flights.out.from} → {flights.out.to}</div>
-            <div className="phcp">{formatKicker(flights.out.date)} · {flights.out.duration}</div>
+            <div className="phcp">{flights.out.carrier} {flights.out.flightNo} · {formatKicker(flights.out.date)} · {flights.out.duration}</div>
           </div>
           <span className="pname">{flights.out.depart}</span>
         </div>
         <div className="row">
           <div>
             <div className="pname">{flights.back.from} → {flights.back.to}</div>
-            <div className="phcp">{formatKicker(flights.back.date)} · {flights.back.duration}</div>
+            <div className="phcp">{flights.back.carrier} {flights.back.flightNo} · {formatKicker(flights.back.date)} · {flights.back.duration}</div>
           </div>
           <span className="pname">{flights.back.depart}</span>
         </div>

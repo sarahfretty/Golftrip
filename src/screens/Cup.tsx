@@ -8,8 +8,9 @@ import type { Player } from "../domain/types";
 // to what is displayed until an organiser declares it — anticipation without false info.
 export function Cup() {
   const ev = useEvent();
-  const declared = ev.rounds.filter((r) => r.status === "declared" || r.status === "locked");
-  const sealed = ev.rounds.filter((r) => r.status === "sealed");
+  const compRounds = ev.rounds.filter((r) => !r.demo);
+  const declared = compRounds.filter((r) => r.status === "declared" || r.status === "locked");
+  const sealed = compRounds.filter((r) => r.status === "sealed");
 
   const totalsFor = (field: Player[]) => {
     const t: Record<string, number[]> = {};
@@ -34,11 +35,13 @@ export function Cup() {
           <div>
             <div className="kicker">Standings</div>
             <div className="h1">The Cup</div>
-            <div className="sub">{declared.length} of {ev.rounds.length} rounds declared</div>
+            <div className="sub">{declared.length} of {compRounds.length} rounds declared</div>
           </div>
           <Shield size={48} />
         </div>
       </header>
+
+      <WarmUp />
 
       {declared.length === 0 ? (
         <div className="center-col grow">
@@ -88,6 +91,35 @@ export function Cup() {
         </>
       )}
     </div>
+  );
+}
+
+// The warm-up (demo) round gets its own single-round leaderboard, shown once declared —
+// so the full flow (enter → sign → declare → standings) can be demoed without touching the Cup.
+function WarmUp() {
+  const ev = useEvent();
+  const demo = ev.rounds.find((r) => r.demo && (r.status === "declared" || r.status === "locked"));
+  if (!demo) return null;
+  const course = ev.getCourse(demo.courseId);
+  const rows = ev.players
+    .filter((p) => p.competing)
+    .map((p) => ({ p, pts: ev.pointsFor(demo.id, p.id), played: ev.cardFor(demo.id, p.id).strokes.some((s) => s !== null) }))
+    .filter((r) => r.played)
+    .sort((a, b) => b.pts - a.pts);
+  if (rows.length === 0) return null;
+  return (
+    <>
+      <div className="banner banner-gold">Warm-up · {course?.name} — a practice round, not part of the Cup.</div>
+      <div className="sec"><div className="sec-label">Warm-up leaderboard · {course?.name}</div></div>
+      <table className="table">
+        <thead><tr><th>#</th><th>Player</th><th className="num">Points</th></tr></thead>
+        <tbody>
+          {rows.map((r, i) => (
+            <tr key={r.p.id}><td>{i + 1}</td><td>{r.p.name}</td><td className="num"><strong>{r.pts}</strong></td></tr>
+          ))}
+        </tbody>
+      </table>
+    </>
   );
 }
 

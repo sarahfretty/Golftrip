@@ -29,7 +29,7 @@ export function Courses() {
             <button key={r.id} className="row" onClick={() => navigate(`/courses/${c.id}`)}>
               <div>
                 <div className="pname">{c.name}</div>
-                <div className="phcp">Round {r.number} · Par {c.par}</div>
+                <div className="phcp">{r.demo ? "Warm-up" : `Round ${r.number}`} · Par {c.par}</div>
               </div>
               <span className="phcp">
                 {men && `${men.tee} ${men.courseRating}/${men.slope}`}

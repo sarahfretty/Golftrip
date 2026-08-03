@@ -87,6 +87,8 @@ export interface Round {
   status: RoundStatus;
   /** Round 3 is sealed until the ceremony. */
   sealedUntilCeremony?: boolean;
+  /** A practice/warm-up round: scoreable, but excluded from the event's competitions. */
+  demo?: boolean;
 }
 
 /** One player's card for one round: 18 gross strokes, or X (no return) per hole. */

@@ -14,7 +14,7 @@ export function Home() {
   // Focus round: the one being scored or sealed, else the next upcoming by date.
   const active = ev.rounds.find((r) => r.status === "scoring" || r.status === "sealed");
   const upcoming = [...ev.rounds]
-    .filter((r) => r.status === "upcoming")
+    .filter((r) => r.status === "upcoming" && !r.demo)
     .sort((a, b) => a.date.localeCompare(b.date))[0];
   const focus = active ?? upcoming ?? ev.rounds[ev.rounds.length - 1];
   const focusCourse = focus && ev.getCourse(focus.courseId);
@@ -69,7 +69,7 @@ export function Home() {
             <div key={r.id} className="row">
               <div>
                 <div className="pname">{c?.name}</div>
-                <div className="phcp">Round {r.number} · {formatKicker(r.date)}</div>
+                <div className="phcp">{r.demo ? "Warm-up round" : `Round ${r.number} · ${formatKicker(r.date)}`}</div>
               </div>
               <span className="tag">{r.status}</span>
             </div>
@@ -113,7 +113,7 @@ function PreTrip({ days }: { days: number }) {
                 <div key={r.id} className="row">
                   <div>
                     <div className="pname">{c?.name}</div>
-                    <div className="phcp">Round {r.number}</div>
+                    <div className="phcp">{r.demo ? "Warm-up" : `Round ${r.number}`}</div>
                   </div>
                   <span className="stat-big" style={{ fontSize: 22 }}>{ph}</span>
                 </div>

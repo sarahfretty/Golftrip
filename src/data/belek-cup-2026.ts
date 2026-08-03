@@ -57,7 +57,38 @@ const MONTGOMERIE_ROWS: HoleRow[] = [
   [16, 135, 109, 3, 18], [17, 307, 286, 4, 12], [18, 449, 403, 5, 4],
 ];
 
+// Wheatley Golf Club, Doncaster — a home course, added to demo scoring. Men play Yellow
+// (Par 71, CR 71.0 / Slope 129), ladies play Red (Par 74, CR 74.5 / Slope 139). Par and
+// stroke index differ per tee, so holes are defined separately. Source: club scorecard +
+// England Golf 95% handicap tables (from 20 Aug 2025). Distances in yards.
+type HoleRow2 = [number, number, number, number]; // [number, par, strokeIndex, distance]
+function holes2(rows: HoleRow2[]): Hole[] {
+  return rows.map(([number, par, strokeIndex, distance]) => ({ number, par, strokeIndex, distance }));
+}
+const WHEATLEY_YELLOW: HoleRow2[] = [
+  [1, 4, 16, 345], [2, 4, 4, 395], [3, 3, 14, 190], [4, 5, 10, 484], [5, 5, 8, 499],
+  [6, 3, 18, 136], [7, 5, 2, 499], [8, 3, 12, 190], [9, 4, 6, 379],
+  [10, 4, 1, 475], [11, 3, 15, 167], [12, 4, 5, 418], [13, 4, 7, 408], [14, 3, 13, 145],
+  [15, 4, 17, 265], [16, 4, 9, 344], [17, 4, 3, 375], [18, 5, 11, 479],
+];
+const WHEATLEY_RED: HoleRow2[] = [
+  [1, 4, 9, 325], [2, 5, 11, 385], [3, 3, 15, 141], [4, 5, 1, 477], [5, 5, 5, 455],
+  [6, 3, 17, 126], [7, 5, 7, 470], [8, 3, 13, 146], [9, 4, 3, 361],
+  [10, 5, 6, 439], [11, 3, 14, 160], [12, 5, 12, 402], [13, 4, 2, 396], [14, 3, 16, 132],
+  [15, 4, 18, 238], [16, 4, 4, 330], [17, 4, 10, 347], [18, 5, 8, 457],
+];
+
 export const COURSES: Course[] = [
+  {
+    id: "wheatley",
+    name: "Wheatley Golf Club",
+    par: 71,
+    distanceUnit: "yd",
+    tees: [
+      { tee: "yellow", gender: "M", courseRating: 71.0, slope: 129, holes: holes2(WHEATLEY_YELLOW) },
+      { tee: "red", gender: "F", courseRating: 74.5, slope: 139, holes: holes2(WHEATLEY_RED) },
+    ],
+  },
   {
     id: "national",
     name: "The National Golf Club",
@@ -155,6 +186,8 @@ export const COMPETITIONS: Competition[] = [
 ];
 
 export const ROUNDS: Round[] = [
+  // Warm-up on a home course — scoreable to demo the flow, excluded from the Cup.
+  { id: "demo-wheatley", number: 0, courseId: "wheatley", date: "2026-09-01", teeWindow: "Warm-up", status: "upcoming", demo: true },
   { id: "r1", number: 1, courseId: "national", date: "2026-09-08", teeWindow: "09:30–10:06", status: "upcoming" },
   { id: "r2", number: 2, courseId: "carya", date: "2026-09-10", teeWindow: "10:12–10:49", status: "upcoming" },
   { id: "r3", number: 3, courseId: "montgomerie", date: "2026-09-12", teeWindow: "15:00–15:30", status: "upcoming", sealedUntilCeremony: true },
@@ -172,8 +205,8 @@ export const EVENT = {
   countingRounds: 2,
   hotel: { name: "Regnum Carya", nights: 7, board: "All Inclusive Plus" },
   flights: {
-    out: { from: "MAN", to: "AYT", date: "2026-09-07", depart: "14:45", arrive: "21:15", duration: "4h 30m" },
-    back: { from: "AYT", to: "MAN", date: "2026-09-14", depart: "22:15", arrive: "01:05", duration: "overnight" },
+    out: { carrier: "Jet2", flightNo: "LS653", from: "EMA", to: "AYT", date: "2026-09-07", depart: "13:00", arrive: "19:25", duration: "4h 25m" },
+    back: { carrier: "Jet2", flightNo: "LS654", from: "AYT", to: "EMA", date: "2026-09-14", depart: "20:15", arrive: "22:55", duration: "4h 40m" },
   },
 } as const;
 
