@@ -221,15 +221,19 @@ const DRAW: { name: string; playerIds: string[]; scorerId: string }[] = [
 ];
 
 export function defaultTeeGroups(): import("../domain/types").TeeGroup[] {
-  return ROUNDS.flatMap((round) =>
-    DRAW.map((g, i) => ({
+  return ROUNDS.flatMap((round) => {
+    // The warm-up is a quick two-player demo with the organisers; real rounds use the full draw.
+    const draw = round.demo
+      ? [{ name: "Warm-up", playerIds: ["sarah", "jane"], scorerId: "sarah" }]
+      : DRAW;
+    return draw.map((g, i) => ({
       id: `${round.id}-g${i + 1}`,
       roundId: round.id,
       name: g.name,
       playerIds: g.playerIds,
       scorerId: g.scorerId,
-    })),
-  );
+    }));
+  });
 }
 
 export const SEED = { EVENT, COURSES, PLAYERS, TEAMS, COUPLES, COMPETITIONS, ROUNDS };
