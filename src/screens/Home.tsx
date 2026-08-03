@@ -12,7 +12,7 @@ export function Home() {
   const me = ev.currentPlayerId ? ev.getPlayer(ev.currentPlayerId) : undefined;
 
   // Focus round: the one being scored or sealed, else the next upcoming by date.
-  const active = ev.rounds.find((r) => r.status === "scoring" || r.status === "sealed");
+  const active = ev.rounds.find((r) => !r.demo && (r.status === "scoring" || r.status === "sealed"));
   const upcoming = [...ev.rounds]
     .filter((r) => r.status === "upcoming" && !r.demo)
     .sort((a, b) => a.date.localeCompare(b.date))[0];
@@ -51,6 +51,26 @@ export function Home() {
           </>
         )}
       </button>
+
+      {/* Warm-up: always reachable, so the whole scoring flow can be demoed before the trip. */}
+      {(() => {
+        const demo = ev.rounds.find((r) => r.demo);
+        if (!demo || demo.status === "declared" || demo.status === "locked") return null;
+        const c = ev.getCourse(demo.courseId);
+        return (
+          <div style={{ padding: "14px 16px", borderBottom: "2px solid var(--color-divider)" }}>
+            <button
+              className="btn btn-gold"
+              onClick={() => {
+                if (demo.status !== "scoring") ev.setRoundStatus(demo.id, "scoring");
+                navigate(`/score/${demo.id}`);
+              }}
+            >
+              <span>Try scoring · {c?.name} warm-up</span><span aria-hidden>→</span>
+            </button>
+          </div>
+        );
+      })()}
 
       {focus?.status === "scoring" ? (
         <RoundDay />
@@ -136,7 +156,7 @@ function PreTrip({ days }: { days: number }) {
 function RoundDay() {
   const ev = useEvent();
   const navigate = useNavigate();
-  const round = ev.rounds.find((r) => r.status === "scoring")!;
+  const round = ev.rounds.find((r) => !r.demo && r.status === "scoring")!;
   const course = ev.getCourse(round.courseId);
   const me = ev.currentPlayerId ? ev.getPlayer(ev.currentPlayerId) : undefined;
   const group = me ? ev.groupForPlayer(round.id, me.id) : undefined;

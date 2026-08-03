@@ -98,7 +98,7 @@ export function Cup() {
 // so the full flow (enter → sign → declare → standings) can be demoed without touching the Cup.
 function WarmUp() {
   const ev = useEvent();
-  const demo = ev.rounds.find((r) => r.demo && (r.status === "declared" || r.status === "locked"));
+  const demo = ev.rounds.find((r) => r.demo && ["scoring", "declared", "locked"].includes(r.status));
   if (!demo) return null;
   const course = ev.getCourse(demo.courseId);
   const rows = ev.players

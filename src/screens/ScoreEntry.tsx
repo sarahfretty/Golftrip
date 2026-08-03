@@ -18,19 +18,30 @@ export function ScoreEntry() {
   const navigate = useNavigate();
   const [hole, setHole] = useState(1);
   const [review, setReview] = useState(false);
+  const [selectedGroupId, setSelectedGroupId] = useState<string | null>(null);
 
   const round = ev.rounds.find((r) => r.id === roundId);
   const course = round && ev.getCourse(round.courseId);
   const me = ev.currentPlayerId ? ev.getPlayer(ev.currentPlayerId) : undefined;
-  const group = me && round ? ev.groupForPlayer(round.id, me.id) : undefined;
+  const isDemo = !!round?.demo;
+  const roundGroups = round ? ev.groupsForRound(round.id) : [];
+  const myGroup = me && round ? ev.groupForPlayer(round.id, me.id) : undefined;
+  // Warm-up rounds are open to anyone and let you score any group; real rounds are
+  // restricted to each group's nominated scorer.
+  const group = isDemo
+    ? roundGroups.find((g) => g.id === selectedGroupId) ?? myGroup ?? roundGroups[0]
+    : myGroup;
 
   if (!round || !course) return <Gate title="Round not found" body="This round doesn't exist." />;
   if (round.status === "locked" || round.status === "declared")
     return <Gate title="Round closed" body="This round's results are final. See the organiser to reopen it." />;
-  if (!me) return <Gate title="Who are you?" body="Tap your name first, then your group's card." cta="/me" ctaLabel="Tap your name" />;
-  if (!group) return <Gate title="Not in a group" body={`${me.name} isn't in a group for this round.`} />;
-  if (group.scorerId !== me.id)
-    return <Gate title={`${ev.getPlayer(group.scorerId)?.name} is scoring`} body={`Only the nominated scorer enters ${group.name}'s card. You can watch the standings once cards are in.`} />;
+  if (!isDemo) {
+    if (!me) return <Gate title="Who are you?" body="Tap your name first, then your group's card." cta="/me" ctaLabel="Tap your name" />;
+    if (!myGroup) return <Gate title="Not in a group" body={`${me.name} isn't in a group for this round.`} />;
+    if (myGroup.scorerId !== me.id)
+      return <Gate title={`${ev.getPlayer(myGroup.scorerId)?.name} is scoring`} body={`Only the nominated scorer enters ${myGroup.name}'s card. You can watch the standings once cards are in.`} />;
+  }
+  if (!group) return <Gate title="No groups yet" body="This round has no tee groups." />;
 
   const holeMeta = course.tees[0].holes.find((h) => h.number === hole)!;
   const groupPlayers = group.playerIds.map((id) => ev.getPlayer(id)!).filter(Boolean);
@@ -50,11 +61,25 @@ export function ScoreEntry() {
   return (
     <div className="screen">
       <header className="hd">
-        <div className="kicker">Round {round.number} · {course.name} · {group.name}</div>
+        <div className="kicker">{isDemo ? "Warm-up" : `Round ${round.number}`} · {course.name} · {group.name}</div>
         <div className="spread" style={{ marginTop: 7 }}>
-          <div className="h1" style={{ margin: 0, fontSize: 22 }}>You are scoring</div>
-          <div className="phcp" style={{ color: "var(--gold-500)" }}>{me.name}</div>
+          <div className="h1" style={{ margin: 0, fontSize: 22 }}>{isDemo ? "Demo scoring" : "You are scoring"}</div>
+          <div className="phcp" style={{ color: "var(--gold-500)" }}>{me?.name ?? "Anyone can score"}</div>
         </div>
+        {isDemo && roundGroups.length > 1 && (
+          <div className="score-grid" style={{ gridTemplateColumns: `repeat(${roundGroups.length},1fr)`, marginTop: 12 }}>
+            {roundGroups.map((g) => (
+              <button
+                key={g.id}
+                className={`sbtn${g.id === group.id ? " selected" : ""}`}
+                style={{ minHeight: 36, fontSize: 11 }}
+                onClick={() => { setSelectedGroupId(g.id); setHole(1); setReview(false); }}
+              >
+                {g.name.replace("Group ", "G")}
+              </button>
+            ))}
+          </div>
+        )}
       </header>
 
       {/* Hole strip */}
