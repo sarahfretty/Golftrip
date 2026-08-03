@@ -1,5 +1,0 @@
-# Redirect the www host to the apex domain (301).
-https://www.golftrips.app/*  https://golftrips.app/:splat  301!
-
-# SPA fallback: serve the app shell for client-side routes (must be last).
-/*  /index.html  200
