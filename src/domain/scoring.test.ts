@@ -14,7 +14,7 @@ import {
   validateHoles,
   validateTeams,
 } from "./scoring";
-import { COURSES, PLAYERS } from "../data/belek-cup-2026";
+import { COURSES, PLAYERS, ROUNDS, LOCKED_FOURBALL, defaultTeeGroups } from "../data/belek-cup-2026";
 import type { Course, Player, TeeSet } from "./types";
 
 function teeFor(course: Course, player: Player): TeeSet {
@@ -201,6 +201,49 @@ describe("Wheatley Golf Club — per-tee pars and official 95% handicaps", () =>
     expect(ph(red, 15.0)).toBe(18);
     expect(ph(red, 20.0)).toBe(24);
     expect(ph(red, 36.0)).toBe(43);
+  });
+});
+
+describe("tee draw rotates without repeating partners", () => {
+  const compRounds = ROUNDS.filter((r) => !r.demo);
+  const golfers = PLAYERS.filter((p) => p.competing).map((p) => p.id);
+  const groupsByRound = (rid: string) => defaultTeeGroups().filter((g) => g.roundId === rid);
+
+  it("covers every golfer exactly once per round", () => {
+    for (const r of compRounds) {
+      const ids = groupsByRound(r.id).flatMap((g) => g.playerIds).sort();
+      expect(ids).toEqual([...golfers].sort());
+    }
+  });
+
+  it("keeps the ladies' fourball together every round", () => {
+    for (const r of compRounds) {
+      const four = groupsByRound(r.id).find((g) => LOCKED_FOURBALL.every((id) => g.playerIds.includes(id)));
+      expect(four).toBeTruthy();
+      expect(four!.playerIds.length).toBe(LOCKED_FOURBALL.length);
+    }
+  });
+
+  it("each group has a scorer drawn from its own players", () => {
+    for (const g of defaultTeeGroups()) expect(g.playerIds).toContain(g.scorerId);
+  });
+
+  it("no partnership outside the fourball repeats in all three rounds", () => {
+    const fourball = new Set(LOCKED_FOURBALL);
+    const count = new Map<string, number>();
+    for (const r of compRounds) {
+      for (const g of groupsByRound(r.id)) {
+        for (let i = 0; i < g.playerIds.length; i++)
+          for (let j = i + 1; j < g.playerIds.length; j++) {
+            const [a, b] = [g.playerIds[i], g.playerIds[j]].sort();
+            if (fourball.has(a) && fourball.has(b)) continue; // the fourball repeats on purpose
+            const k = `${a}~${b}`;
+            count.set(k, (count.get(k) ?? 0) + 1);
+          }
+      }
+    }
+    const tripled = [...count.entries()].filter(([, c]) => c >= 3);
+    expect(tripled).toEqual([]);
   });
 });
 

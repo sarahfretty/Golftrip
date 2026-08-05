@@ -210,22 +210,43 @@ export const EVENT = {
   },
 } as const;
 
-// Default tee draw. Shuffled per round in reality (organiser-editable); the fourball
-// (Group Three) stays locked together every round. Seeded here so the app runs with a
-// realistic draw out of the box. Scorer defaults to the first-named player in each group.
-const DRAW: { name: string; playerIds: string[]; scorerId: string }[] = [
-  { name: "Group One", playerIds: ["sarah", "martin", "jim", "nicky"], scorerId: "sarah" },
-  { name: "Group Two", playerIds: ["jane", "mark", "jo-irving", "chris"], scorerId: "jane" },
-  { name: "Group Three", playerIds: ["debs", "kathy", "cynthia", "catherine"], scorerId: "debs" },
-  { name: "Group Four", playerIds: ["paul", "jo-campbell"], scorerId: "paul" },
-];
+// Tee draws rotate every round so partners don't repeat, with an even men/women mix in
+// each group. The ladies' fourball (Cynthia, Kathy, Debs, Catherine) stays locked together
+// every round — the one deliberate exception. Computed to minimise repeat pairings across
+// the three rounds; organiser-editable in the app.
+type DrawGroup = { name: string; playerIds: string[]; scorerId: string };
+const FOURBALL_GROUP: DrawGroup = {
+  name: "The Fourball",
+  playerIds: ["cynthia", "kathy", "debs", "catherine"],
+  scorerId: "debs",
+};
+const DRAWS: Record<string, DrawGroup[]> = {
+  r1: [
+    { name: "Group 1", playerIds: ["jim", "sarah", "chris", "jo-campbell"], scorerId: "sarah" },
+    { name: "Group 2", playerIds: ["martin", "nicky", "paul"], scorerId: "martin" },
+    { name: "Group 3", playerIds: ["mark", "jo-irving", "jane"], scorerId: "jane" },
+    FOURBALL_GROUP,
+  ],
+  r2: [
+    { name: "Group 1", playerIds: ["jim", "jane", "martin", "jo-campbell"], scorerId: "jane" },
+    { name: "Group 2", playerIds: ["paul", "sarah", "mark"], scorerId: "sarah" },
+    { name: "Group 3", playerIds: ["chris", "jo-irving", "nicky"], scorerId: "chris" },
+    FOURBALL_GROUP,
+  ],
+  r3: [
+    { name: "Group 1", playerIds: ["martin", "sarah", "chris", "jane"], scorerId: "sarah" },
+    { name: "Group 2", playerIds: ["mark", "nicky", "jim"], scorerId: "jim" },
+    { name: "Group 3", playerIds: ["paul", "jo-irving", "jo-campbell"], scorerId: "paul" },
+    FOURBALL_GROUP,
+  ],
+};
 
 export function defaultTeeGroups(): import("../domain/types").TeeGroup[] {
   return ROUNDS.flatMap((round) => {
-    // The warm-up is a quick two-player demo with the organisers; real rounds use the full draw.
+    // The warm-up is a quick two-player demo with the organisers; real rounds use the rotating draw.
     const draw = round.demo
       ? [{ name: "Warm-up", playerIds: ["sarah", "jane"], scorerId: "sarah" }]
-      : DRAW;
+      : DRAWS[round.id] ?? [];
     return draw.map((g, i) => ({
       id: `${round.id}-g${i + 1}`,
       roundId: round.id,

@@ -105,7 +105,9 @@ function loadState(): EventState {
     });
     const teeGroups = base.teeGroups.map((g) => {
       const saved = parsed.teeGroups?.find((x) => x.id === g.id);
-      return saved ? { ...g, scorerId: saved.scorerId } : g;
+      // Keep a saved scorer only if they're still in this (possibly re-drawn) group.
+      const scorerId = saved && g.playerIds.includes(saved.scorerId) ? saved.scorerId : g.scorerId;
+      return { ...g, scorerId };
     });
     const teams = base.teams.map((t) => {
       const saved = parsed.teams?.find((x) => x.id === t.id);
