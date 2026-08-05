@@ -8,7 +8,6 @@ export function Trip() {
   const { flights, hotel } = ev.event;
   const teamsPicked = ev.teams.some((t) => t.playerIds.length > 0);
   const rounds = ev.rounds.filter((r) => !r.demo); // the Turkey itinerary — not the warm-up
-  const firstRound = rounds[0];
 
   return (
     <div className="screen">
@@ -101,18 +100,25 @@ export function Trip() {
         </div>
       )}
 
-      <div className="sec"><div className="sec-label">Tee groups · Round {firstRound.number}</div></div>
-      <div className="rows">
-        {ev.groupsForRound(firstRound.id).map((g) => (
-          <div key={g.id} className="row">
-            <div>
-              <div className="pname">{g.name}</div>
-              <div className="phcp">{g.playerIds.map((pid) => ev.getPlayer(pid)?.name).join(" · ")}</div>
+      {rounds.map((r) => {
+        const c = ev.getCourse(r.courseId);
+        return (
+          <div key={r.id}>
+            <div className="sec"><div className="sec-label">Tee groups · Round {r.number} · {c?.name}</div></div>
+            <div className="rows">
+              {ev.groupsForRound(r.id).map((g) => (
+                <div key={g.id} className="row">
+                  <div>
+                    <div className="pname">{g.name}</div>
+                    <div className="phcp">{g.playerIds.map((pid) => ev.getPlayer(pid)?.name).join(" · ")}</div>
+                  </div>
+                  <span className="tag">Scorer {ev.getPlayer(g.scorerId)?.name}</span>
+                </div>
+              ))}
             </div>
-            <span className="tag">Scorer {ev.getPlayer(g.scorerId)?.name}</span>
           </div>
-        ))}
-      </div>
+        );
+      })}
     </div>
   );
 }
