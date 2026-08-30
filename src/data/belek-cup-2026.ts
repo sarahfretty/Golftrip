@@ -57,38 +57,7 @@ const MONTGOMERIE_ROWS: HoleRow[] = [
   [16, 135, 109, 3, 18], [17, 307, 286, 4, 12], [18, 449, 403, 5, 4],
 ];
 
-// Wheatley Golf Club, Doncaster — a home course, added to demo scoring. Men play Yellow
-// (Par 71, CR 71.0 / Slope 129), ladies play Red (Par 74, CR 74.5 / Slope 139). Par and
-// stroke index differ per tee, so holes are defined separately. Source: club scorecard +
-// England Golf 95% handicap tables (from 20 Aug 2025). Distances in yards.
-type HoleRow2 = [number, number, number, number]; // [number, par, strokeIndex, distance]
-function holes2(rows: HoleRow2[]): Hole[] {
-  return rows.map(([number, par, strokeIndex, distance]) => ({ number, par, strokeIndex, distance }));
-}
-const WHEATLEY_YELLOW: HoleRow2[] = [
-  [1, 4, 16, 345], [2, 4, 4, 395], [3, 3, 14, 190], [4, 5, 10, 484], [5, 5, 8, 499],
-  [6, 3, 18, 136], [7, 5, 2, 499], [8, 3, 12, 190], [9, 4, 6, 379],
-  [10, 4, 1, 475], [11, 3, 15, 167], [12, 4, 5, 418], [13, 4, 7, 408], [14, 3, 13, 145],
-  [15, 4, 17, 265], [16, 4, 9, 344], [17, 4, 3, 375], [18, 5, 11, 479],
-];
-const WHEATLEY_RED: HoleRow2[] = [
-  [1, 4, 9, 325], [2, 5, 11, 385], [3, 3, 15, 141], [4, 5, 1, 477], [5, 5, 5, 455],
-  [6, 3, 17, 126], [7, 5, 7, 470], [8, 3, 13, 146], [9, 4, 3, 361],
-  [10, 5, 6, 439], [11, 3, 14, 160], [12, 5, 12, 402], [13, 4, 2, 396], [14, 3, 16, 132],
-  [15, 4, 18, 238], [16, 4, 4, 330], [17, 4, 10, 347], [18, 5, 8, 457],
-];
-
 export const COURSES: Course[] = [
-  {
-    id: "wheatley",
-    name: "Wheatley Golf Club",
-    par: 71,
-    distanceUnit: "yd",
-    tees: [
-      { tee: "yellow", gender: "M", courseRating: 71.0, slope: 129, holes: holes2(WHEATLEY_YELLOW) },
-      { tee: "red", gender: "F", courseRating: 74.5, slope: 139, holes: holes2(WHEATLEY_RED) },
-    ],
-  },
   {
     id: "national",
     name: "The National Golf Club",
@@ -122,7 +91,7 @@ export const COURSES: Course[] = [
   },
 ];
 
-const FOURBALL = "ladies-fourball";
+const LOCKED = "ladies-threeball";
 
 function player(
   id: string,
@@ -147,47 +116,52 @@ export const PLAYERS: Player[] = [
   player("sarah", "Sarah", "Sarah Barlow", "F", "red", 10.0, { organiser: true }),
   player("jane", "Jane", "Jane Davies", "F", "red", 13.2, { organiser: true }),
   player("nicky", "Nicky", "Nicky Harrod", "F", "red", 15.8),
-  player("cynthia", "Cynthia", "Cynthia Porter", "F", "red", 18.7, { lockedGroup: FOURBALL }),
-  player("kathy", "Kathy", "Kathy Houseman", "F", "red", 22.8, { lockedGroup: FOURBALL }),
+  player("kathy", "Kathy", "Kathy Houseman", "F", "red", 22.8, { lockedGroup: LOCKED }),
   player("jo-irving", "Jo I", "Jo Irving", "F", "red", 23.5),
-  player("debs", "Debs", "Debs Dugher", "F", "red", 26.0, { lockedGroup: FOURBALL }),
+  player("debs", "Debs", "Debs Dugher", "F", "red", 26.0, { lockedGroup: LOCKED }),
   player("jo-campbell", "Jo C", "Jo Campbell", "F", "red", 36.5),
   player("catherine", "Catherine", "Catherine Bailey", "F", "red", 45.0, {
-    lockedGroup: FOURBALL,
+    lockedGroup: LOCKED,
     indexProvisional: true,
+    // Plays every round and her card is recorded, but her scores are not in the
+    // championships or the Team Cup. Side prizes are still open to her.
+    competing: false,
   }),
-  // Attendees — not competing
+  // Attendees — don't play at all
   player("graham", "Graham", "Graham", "M", "yellow", null),
   player("michelle", "Michelle", "Michelle", "F", "red", null),
 ];
 
-/** The ladies' fourball, locked together every round. */
-export const LOCKED_FOURBALL = PLAYERS.filter((p) => p.lockedGroup === FOURBALL).map((p) => p.id);
+/** Everyone who tees off. Attendees have no index and don't play; Catherine plays but doesn't score. */
+export const PLAYING = PLAYERS.filter((p) => p.index !== null);
 
-// Teams are an open organiser decision: two fixed teams of seven, with the fourball
-// split 2-2 and couples split across teams. Seeded unassigned — the organiser picks
-// in-app and the engine warns on imbalance. See docs/ADMIN.md.
+/** The ladies' group, locked together every round. */
+export const LOCKED_GROUP_IDS = PLAYERS.filter((p) => p.lockedGroup === LOCKED).map((p) => p.id);
+
+// The two teams, picked by the organiser (30 Aug 2026): six a side from the twelve golfers
+// who score, plus everyone else on the trip in nonScoringIds — Catherine plays unscored,
+// Graham and Michelle don't play. Editable in the Console; hidden until the organiser reveals.
 export const TEAMS: Team[] = [
-  { id: "team-a", name: "Team A", playerIds: [] },
-  { id: "team-b", name: "Team B", playerIds: [] },
+  { id: "team-gold", name: "Gold", playerIds: ["mark", "jim", "jane", "chris", "kathy", "jo-campbell"], nonScoringIds: ["michelle"] },
+  { id: "team-aqua", name: "Aqua", playerIds: ["martin", "paul", "sarah", "nicky", "jo-irving", "debs"], nonScoringIds: ["catherine", "graham"] },
 ];
 
-// Couple pairings are personal data not fully specified in the handover. They exist
-// only as a team-balancing constraint (couples split across teams). Left for the
-// organiser to confirm rather than guessed from surnames.
+// Couples are NOT split across the teams — the organisers tried it and it didn't work
+// out, so the constraint was dropped (30 Aug 2026). This list stays empty and the
+// balance check stays dormant; populate it only if the rule is ever reinstated.
 export const COUPLES: Couple[] = [];
 
 export const COMPETITIONS: Competition[] = [
   { id: "team-cup", name: "The Team Cup", type: "team-stableford", countingRounds: 2 },
   { id: "ladies-oom", name: "Ladies' Champion", type: "individual-stableford", gender: "F", countingRounds: 2 },
   { id: "mens-oom", name: "Men's Champion", type: "individual-stableford", gender: "M", countingRounds: 2 },
-  { id: "ntp", name: "Nearest the Pin", type: "nearest-the-pin" },
-  { id: "ld", name: "Longest Drive", type: "longest-drive" },
+  { id: "ntp-men", name: "Nearest the Pin — Men", type: "nearest-the-pin", gender: "M" },
+  { id: "ntp-ladies", name: "Nearest the Pin — Ladies", type: "nearest-the-pin", gender: "F" },
+  { id: "ld-men", name: "Longest Drive — Men", type: "longest-drive", gender: "M" },
+  { id: "ld-ladies", name: "Longest Drive — Ladies", type: "longest-drive", gender: "F" },
 ];
 
 export const ROUNDS: Round[] = [
-  // Warm-up on a home course — scoreable to demo the flow, excluded from the Cup.
-  { id: "demo-wheatley", number: 0, courseId: "wheatley", date: "2026-09-01", teeWindow: "Warm-up", status: "upcoming", demo: true },
   { id: "r1", number: 1, courseId: "national", date: "2026-09-08", teeWindow: "09:30–10:06", status: "upcoming" },
   { id: "r2", number: 2, courseId: "carya", date: "2026-09-10", teeWindow: "10:12–10:49", status: "upcoming" },
   { id: "r3", number: 3, courseId: "montgomerie", date: "2026-09-12", teeWindow: "15:00–15:30", status: "upcoming", sealedUntilCeremony: true },
@@ -211,13 +185,13 @@ export const EVENT = {
 } as const;
 
 // Tee draws rotate every round so partners don't repeat, with an even men/women mix in
-// each group. The ladies' fourball (Cynthia, Kathy, Debs, Catherine) stays locked together
-// every round — the one deliberate exception. Computed to minimise repeat pairings across
+// each group. The ladies' threeball (Kathy, Debs, Catherine) stays locked together every
+// round — the one deliberate exception. Computed to minimise repeat pairings across
 // the three rounds; organiser-editable in the app.
 type DrawGroup = { name: string; playerIds: string[]; scorerId: string };
-const FOURBALL_GROUP: DrawGroup = {
-  name: "The Fourball",
-  playerIds: ["cynthia", "kathy", "debs", "catherine"],
+const LOCKED_GROUP: DrawGroup = {
+  name: "The Threeball",
+  playerIds: ["kathy", "debs", "catherine"],
   scorerId: "debs",
 };
 const DRAWS: Record<string, DrawGroup[]> = {
@@ -225,28 +199,25 @@ const DRAWS: Record<string, DrawGroup[]> = {
     { name: "Group 1", playerIds: ["jim", "sarah", "chris", "jo-campbell"], scorerId: "sarah" },
     { name: "Group 2", playerIds: ["martin", "nicky", "paul"], scorerId: "martin" },
     { name: "Group 3", playerIds: ["mark", "jo-irving", "jane"], scorerId: "jane" },
-    FOURBALL_GROUP,
+    LOCKED_GROUP,
   ],
   r2: [
     { name: "Group 1", playerIds: ["jim", "jane", "martin", "jo-campbell"], scorerId: "jane" },
     { name: "Group 2", playerIds: ["paul", "sarah", "mark"], scorerId: "sarah" },
     { name: "Group 3", playerIds: ["chris", "jo-irving", "nicky"], scorerId: "chris" },
-    FOURBALL_GROUP,
+    LOCKED_GROUP,
   ],
   r3: [
     { name: "Group 1", playerIds: ["martin", "sarah", "chris", "jane"], scorerId: "sarah" },
     { name: "Group 2", playerIds: ["mark", "nicky", "jim"], scorerId: "jim" },
     { name: "Group 3", playerIds: ["paul", "jo-irving", "jo-campbell"], scorerId: "paul" },
-    FOURBALL_GROUP,
+    LOCKED_GROUP,
   ],
 };
 
 export function defaultTeeGroups(): import("../domain/types").TeeGroup[] {
   return ROUNDS.flatMap((round) => {
-    // The warm-up is a quick two-player demo with the organisers; real rounds use the rotating draw.
-    const draw = round.demo
-      ? [{ name: "Warm-up", playerIds: ["sarah", "jane"], scorerId: "sarah" }]
-      : DRAWS[round.id] ?? [];
+    const draw = DRAWS[round.id] ?? [];
     return draw.map((g, i) => ({
       id: `${round.id}-g${i + 1}`,
       roundId: round.id,

@@ -59,8 +59,14 @@ export interface Player {
 export interface Team {
   id: Id;
   name: string;
-  /** Player ids. Two fixed teams of seven, assigned by the organiser. */
+  /** Whose cards score for this team. Two teams of six, assigned by the organiser. */
   playerIds: Id[];
+  /**
+   * The rest of the team: everyone who belongs to it but whose card never counts —
+   * a golfer who plays unscored, or an attendee who doesn't play at all. They appear
+   * on the Trip tab with their team and are ignored by every standing.
+   */
+  nonScoringIds: Id[];
 }
 
 /** A couple — used only as a team-balancing constraint (split across teams). */
@@ -87,8 +93,6 @@ export interface Round {
   status: RoundStatus;
   /** Round 3 is sealed until the ceremony. */
   sealedUntilCeremony?: boolean;
-  /** A practice/warm-up round: scoreable, but excluded from the event's competitions. */
-  demo?: boolean;
 }
 
 /** One player's card for one round: 18 gross strokes, or X (no return) per hole. */

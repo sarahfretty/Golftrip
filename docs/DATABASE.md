@@ -53,7 +53,11 @@ npm run db:seed
 - Shots on a hole fall by stroke index (two on the lowest SIs once the handicap exceeds 18, etc.).
 - Stableford points = `max(0, par + 2 − net)`; an **X** (no return) or blank hole scores zero.
 - Gross is honest or hidden: any X makes the total a floor ("84+"), never a fabricated number.
-- Order of Merit and the Team Cup use **best 2 of 3** — each player's worst round is dropped.
+- The Order of Merit uses **best 2 of 3** — each player's worst round is dropped.
+- The Team Cup selects twice: within a round only the team's **best five cards** count, then
+  across the event only its **best 2 of 3 round scores** count. Selecting cards per round is
+  what keeps teams comparable if they are ever uneven — each side contributes five cards
+  whatever its headcount.
 
 ## Adapter status — the main remaining backend task
 

@@ -24,7 +24,7 @@ of scope for v1.
 4. **AI round reports.** Three organiser-approved round reports are scoped. Not implemented —
    for now the Announcements feature can carry a manually written report. Generation +
    approval flow is a follow-up.
-5. **Group draw generation.** Tee groups are seeded with the ladies' fourball locked, and the
+5. **Group draw generation.** Tee groups are seeded with the ladies' threeball locked, and the
    scorer is editable, but automatic per-round reshuffling ("maximise new pairings") and a full
    group-membership editor are not built.
 
@@ -41,7 +41,7 @@ of scope for v1.
 
 ## Testing & tooling
 
-9. **Engine is unit-tested (38 tests); the UI is not yet covered by automated E2E tests.** A
+9. **Engine is unit-tested (61 tests); the UI is not yet covered by automated E2E tests.** A
    Playwright smoke test of the score-entry → declare → leaderboard path would be a good add.
 10. **Node version:** Vite 8 wants Node 20.19+ or 22.12+. `.nvmrc` pins `20.19.0` for CI; a
     local 22.11 install only prints a warning.

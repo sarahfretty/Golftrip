@@ -12,9 +12,9 @@ export function Home() {
   const me = ev.currentPlayerId ? ev.getPlayer(ev.currentPlayerId) : undefined;
 
   // Focus round: the one being scored or sealed, else the next upcoming by date.
-  const active = ev.rounds.find((r) => !r.demo && (r.status === "scoring" || r.status === "sealed"));
+  const active = ev.rounds.find((r) => r.status === "scoring" || r.status === "sealed");
   const upcoming = [...ev.rounds]
-    .filter((r) => r.status === "upcoming" && !r.demo)
+    .filter((r) => r.status === "upcoming")
     .sort((a, b) => a.date.localeCompare(b.date))[0];
   const focus = active ?? upcoming ?? ev.rounds[ev.rounds.length - 1];
   const focusCourse = focus && ev.getCourse(focus.courseId);
@@ -28,7 +28,7 @@ export function Home() {
           <div>
             <div className="kicker">Belek · Turkey</div>
             <div className="h1" style={{ marginTop: 6 }}>The Belek Cup<br />2026</div>
-            <div className="sub">7–14 September · sixteen of us</div>
+            <div className="sub">7–14 September · fifteen of us</div>
           </div>
           <Shield size={56} />
         </div>
@@ -52,26 +52,6 @@ export function Home() {
         )}
       </button>
 
-      {/* Warm-up: always reachable, so the whole scoring flow can be demoed before the trip. */}
-      {(() => {
-        const demo = ev.rounds.find((r) => r.demo);
-        if (!demo || demo.status === "declared" || demo.status === "locked") return null;
-        const c = ev.getCourse(demo.courseId);
-        return (
-          <div style={{ padding: "14px 16px", borderBottom: "2px solid var(--color-divider)" }}>
-            <button
-              className="btn btn-gold"
-              onClick={() => {
-                if (demo.status !== "scoring") ev.setRoundStatus(demo.id, "scoring");
-                navigate(`/score/${demo.id}`);
-              }}
-            >
-              <span>Try scoring · {c?.name} warm-up</span><span aria-hidden>→</span>
-            </button>
-          </div>
-        );
-      })()}
-
       {focus?.status === "scoring" ? (
         <RoundDay />
       ) : focus?.status === "sealed" ? (
@@ -89,7 +69,7 @@ export function Home() {
             <div key={r.id} className="row">
               <div>
                 <div className="pname">{c?.name}</div>
-                <div className="phcp">{r.demo ? "Warm-up round" : `Round ${r.number} · ${formatKicker(r.date)}`}</div>
+                <div className="phcp">Round {r.number} · {formatKicker(r.date)}</div>
               </div>
               <span className="tag">{r.status}</span>
             </div>
@@ -133,7 +113,7 @@ function PreTrip({ days }: { days: number }) {
                 <div key={r.id} className="row">
                   <div>
                     <div className="pname">{c?.name}</div>
-                    <div className="phcp">{r.demo ? "Warm-up" : `Round ${r.number}`}</div>
+                    <div className="phcp">Round {r.number}</div>
                   </div>
                   <span className="stat-big" style={{ fontSize: 22 }}>{ph}</span>
                 </div>
@@ -146,7 +126,7 @@ function PreTrip({ days }: { days: number }) {
       <div className="prose">
         <div className="sec-label" style={{ marginBottom: 8 }}>The format, once</div>
         Individual Stableford, three rounds, {Math.round(ev.event.allowance * 100)}% of your course handicap.
-        Best {ev.event.countingRounds} of 3 count. Nearest the pin and longest drive each round.
+        Best {ev.event.countingRounds} of 3 count. Nearest the pin and longest drive each round, men's and ladies'.
       </div>
       <div className="note">Nothing to enter yet. We'll wake up when you land.</div>
     </>
@@ -156,7 +136,7 @@ function PreTrip({ days }: { days: number }) {
 function RoundDay() {
   const ev = useEvent();
   const navigate = useNavigate();
-  const round = ev.rounds.find((r) => !r.demo && r.status === "scoring")!;
+  const round = ev.rounds.find((r) => r.status === "scoring")!;
   const course = ev.getCourse(round.courseId);
   const me = ev.currentPlayerId ? ev.getPlayer(ev.currentPlayerId) : undefined;
   const group = me ? ev.groupForPlayer(round.id, me.id) : undefined;

@@ -28,7 +28,7 @@ import {
   ROUNDS,
   TEAMS,
   COUPLES,
-  LOCKED_FOURBALL,
+  LOCKED_GROUP_IDS,
   defaultTeeGroups,
 } from "../data/belek-cup-2026";
 import type {
@@ -60,6 +60,8 @@ const STORAGE_KEY = "golftrips:belek-cup-2026:v1";
 interface EventState {
   rounds: Round[];
   teams: Team[];
+  /** Teams are picked privately and only appear on the Trip tab once the organiser reveals them. */
+  teamsRevealed: boolean;
   teeGroups: TeeGroup[];
   scorecards: Record<string, Scorecard>; // key: `${roundId}:${playerId}`
   sidePrizes: SidePrize[];
@@ -83,7 +85,8 @@ function emptyCard(roundId: string, playerId: string): Scorecard {
 function initialState(): EventState {
   return {
     rounds: ROUNDS.map((r) => ({ ...r })),
-    teams: TEAMS.map((t) => ({ ...t, playerIds: [...t.playerIds] })),
+    teams: TEAMS.map((t) => ({ ...t, playerIds: [...t.playerIds], nonScoringIds: [...t.nonScoringIds] })),
+    teamsRevealed: false,
     teeGroups: defaultTeeGroups(),
     scorecards: {},
     sidePrizes: [],
@@ -109,16 +112,27 @@ function loadState(): EventState {
       const scorerId = saved && g.playerIds.includes(saved.scorerId) ? saved.scorerId : g.scorerId;
       return { ...g, scorerId };
     });
+    // Drop any saved id that is no longer a player — someone can withdraw from the trip.
+    const known = new Set(PLAYERS.map((p) => p.id));
     const teams = base.teams.map((t) => {
       const saved = parsed.teams?.find((x) => x.id === t.id);
-      return saved ? { ...t, playerIds: saved.playerIds } : t;
+      if (!saved) return t;
+      return {
+        ...t,
+        playerIds: saved.playerIds.filter((id) => known.has(id)),
+        nonScoringIds: (saved.nonScoringIds ?? t.nonScoringIds).filter((id) => known.has(id)),
+      };
     });
     return {
       rounds,
       teams,
+      teamsRevealed: parsed.teamsRevealed ?? base.teamsRevealed,
       teeGroups,
       scorecards: parsed.scorecards ?? base.scorecards,
-      sidePrizes: parsed.sidePrizes ?? base.sidePrizes,
+      // Drop results for competitions that no longer exist (the side prizes were split by gender).
+      sidePrizes: (parsed.sidePrizes ?? base.sidePrizes).filter((sp) =>
+        COMPETITIONS.some((c) => c.id === sp.competitionId),
+      ),
       announcements: parsed.announcements ?? base.announcements,
     };
   } catch {
@@ -136,10 +150,11 @@ export interface EventContextValue {
   players: Player[];
   competitions: typeof COMPETITIONS;
   couples: typeof COUPLES;
-  lockedFourball: string[];
+  lockedGroupIds: string[];
   // Mutable state
   rounds: Round[];
   teams: Team[];
+  teamsRevealed: boolean;
   teeGroups: TeeGroup[];
   sidePrizes: SidePrize[];
   announcements: Announcement[];
@@ -172,6 +187,7 @@ export interface EventContextValue {
   setSidePrize: (roundId: string, competitionId: string, hole: number, winnerId: string | null) => void;
   setGroupScorer: (groupId: string, playerId: string) => void;
   setTeams: (teams: Team[]) => void;
+  setTeamsRevealed: (revealed: boolean) => void;
   addAnnouncement: (title: string, body: string, by: string) => void;
   resetAll: () => void;
 }
@@ -264,11 +280,9 @@ export function EventProvider({ children }: { children: ReactNode }) {
   const roundTotalsByPlayer = useCallback(
     (gender: "M" | "F"): Record<string, number[]> => {
       const field = PLAYERS.filter((p) => p.competing && p.gender === gender);
-      // Only competition rounds count — the warm-up (demo) round is excluded.
-      const compRounds = state.rounds.filter((r) => !r.demo);
       const result: Record<string, number[]> = {};
       for (const p of field) {
-        result[p.id] = compRounds.map((r) => pointsFor(r.id, p.id));
+        result[p.id] = state.rounds.map((r) => pointsFor(r.id, p.id));
       }
       return result;
     },
@@ -383,6 +397,10 @@ export function EventProvider({ children }: { children: ReactNode }) {
     setState((s) => ({ ...s, teams }));
   }, []);
 
+  const setTeamsRevealed = useCallback((revealed: boolean) => {
+    setState((s) => ({ ...s, teamsRevealed: revealed }));
+  }, []);
+
   const addAnnouncement = useCallback((title: string, body: string, by: string) => {
     setState((s) => ({
       ...s,
@@ -402,9 +420,10 @@ export function EventProvider({ children }: { children: ReactNode }) {
       players: PLAYERS,
       competitions: COMPETITIONS,
       couples: COUPLES,
-      lockedFourball: LOCKED_FOURBALL,
+      lockedGroupIds: LOCKED_GROUP_IDS,
       rounds: state.rounds,
       teams: state.teams,
+      teamsRevealed: state.teamsRevealed,
       teeGroups: state.teeGroups,
       sidePrizes: state.sidePrizes,
       announcements: state.announcements,
@@ -431,6 +450,7 @@ export function EventProvider({ children }: { children: ReactNode }) {
       setSidePrize,
       setGroupScorer,
       setTeams,
+      setTeamsRevealed,
       addAnnouncement,
       resetAll,
     }),
@@ -438,7 +458,7 @@ export function EventProvider({ children }: { children: ReactNode }) {
       state, currentPlayerId, isOrganiser, getPlayer, getCourse, teeFor, playingHandicapFor,
       cardFor, groupsForRound, groupForPlayer, pointsFor, shotsFor, orderOfMeritFor, teamCup,
       selectPlayer, loginOrganiser, logoutOrganiser, setStroke, signCard, correctStroke,
-      setRoundStatus, setSidePrize, setGroupScorer, setTeams, addAnnouncement, resetAll,
+      setRoundStatus, setSidePrize, setGroupScorer, setTeams, setTeamsRevealed, addAnnouncement, resetAll,
     ],
   );
 

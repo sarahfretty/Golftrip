@@ -180,28 +180,70 @@ export function orderOfMerit(
 export interface TeamStandingRow {
   teamId: string;
   total: number;
-  /** Each member's best-N contribution. */
+  /** This team's score for every round, in the order the totals were supplied. */
+  roundScores: number[];
+  /** Points each member actually contributed — cards that counted, in rounds that counted. */
   contributions: { playerId: string; total: number }[];
 }
 
+/** How many cards count for a team in a single round. */
+export const CARDS_PER_ROUND = 5;
+
 /**
- * Team Cup: each member's worst round is dropped (best-N), then member totals are summed.
+ * Team Cup. Two selections happen, in this order:
+ *
+ *   1. Within a round, only the team's best `cardsPerRound` cards count — a blow-up
+ *      round or a no return is the card the team drops, so one bad day costs it nothing.
+ *   2. Across the event, only the team's best `countingRounds` round scores count.
+ *
+ * Selecting cards per round (rather than summing every member) is what keeps teams of
+ * different sizes comparable: each side contributes the same number of cards whatever
+ * its headcount. Every member is a candidate every round; nobody is nominated in advance.
  */
 export function teamStandings(
   teams: { id: string; playerIds: string[] }[],
   roundTotalsByPlayer: Record<string, number[]>,
   countingRounds: number,
+  cardsPerRound: number = CARDS_PER_ROUND,
 ): TeamStandingRow[] {
+  const roundCount = Math.max(
+    0,
+    ...teams.flatMap((t) => t.playerIds.map((pid) => roundTotalsByPlayer[pid]?.length ?? 0)),
+  );
+
   return teams
     .map((team) => {
-      const contributions = team.playerIds.map((playerId) => ({
-        playerId,
-        total: bestNTotal(roundTotalsByPlayer[playerId] ?? [], countingRounds),
-      }));
+      // Round by round, take the best cards on the team.
+      const perRound = Array.from({ length: roundCount }, (_, i) => {
+        const counted = team.playerIds
+          .map((playerId) => ({ playerId, points: roundTotalsByPlayer[playerId]?.[i] ?? 0 }))
+          .sort((a, b) => b.points - a.points)
+          .slice(0, cardsPerRound);
+        return { score: counted.reduce((sum, c) => sum + c.points, 0), counted };
+      });
+
+      // Then keep only the team's best rounds.
+      const countingRoundIdx = perRound
+        .map((r, i) => ({ i, score: r.score }))
+        .sort((a, b) => b.score - a.score)
+        .slice(0, countingRounds)
+        .map((r) => r.i);
+
+      const tally = new Map<string, number>();
+      for (const i of countingRoundIdx) {
+        for (const c of perRound[i].counted) {
+          tally.set(c.playerId, (tally.get(c.playerId) ?? 0) + c.points);
+        }
+      }
+
       return {
         teamId: team.id,
-        total: contributions.reduce((s, c) => s + c.total, 0),
-        contributions,
+        total: countingRoundIdx.reduce((sum, i) => sum + perRound[i].score, 0),
+        roundScores: perRound.map((r) => r.score),
+        contributions: team.playerIds.map((playerId) => ({
+          playerId,
+          total: tally.get(playerId) ?? 0,
+        })),
       };
     })
     .sort((a, b) => b.total - a.total);
@@ -245,8 +287,11 @@ export function validateTeams(
 ): string[] {
   const warnings: string[] = [];
 
+  // An odd number of players can't split evenly, so one team may carry an extra. An even
+  // number must split exactly — the tolerance follows the field rather than being fixed.
   const sizes = teams.map((t) => t.playerIds.length);
-  if (new Set(sizes).size > 1) {
+  const allowedGap = sizes.reduce((a, b) => a + b, 0) % 2;
+  if (sizes.length > 0 && Math.max(...sizes) - Math.min(...sizes) > allowedGap) {
     warnings.push(`Teams are uneven: ${teams.map((t) => `${t.name} ${t.playerIds.length}`).join(", ")}.`);
   }
 
@@ -259,15 +304,16 @@ export function validateTeams(
     }
   }
 
-  // The locked fourball should be split evenly across the two teams.
+  // The locked group should be split as evenly as its size allows across the two teams.
   const perTeam = new Map<string, number>();
   for (const pid of lockedGroupIds) {
     const t = teamOf(pid);
     if (t) perTeam.set(t, (perTeam.get(t) ?? 0) + 1);
   }
   const counts = [...perTeam.values()];
-  if (lockedGroupIds.length > 0 && (counts.length < 2 || Math.max(...counts) - Math.min(...counts) > 0)) {
-    warnings.push("The locked fourball is not split evenly across the two teams.");
+  const lockedGap = counts.reduce((a, b) => a + b, 0) % 2;
+  if (lockedGroupIds.length > 0 && (counts.length < 2 || Math.max(...counts) - Math.min(...counts) > lockedGap)) {
+    warnings.push("The locked group is not split across the two teams.");
   }
 
   return warnings;

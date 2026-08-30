@@ -6,8 +6,7 @@ import { formatShortDate, formatKicker, formatTime } from "../lib/format";
 export function Trip() {
   const ev = useEvent();
   const { flights, hotel } = ev.event;
-  const teamsPicked = ev.teams.some((t) => t.playerIds.length > 0);
-  const rounds = ev.rounds.filter((r) => !r.demo); // the Turkey itinerary — not the warm-up
+  const rounds = ev.rounds;
 
   return (
     <div className="screen">
@@ -82,7 +81,7 @@ export function Trip() {
       </div>
 
       <div className="sec"><div className="sec-label">Teams</div></div>
-      {teamsPicked ? (
+      {ev.teamsRevealed ? (
         <div className="card-grid" style={{ paddingBottom: 8 }}>
           {ev.teams.map((t) => (
             <div key={t.id} className="card">
@@ -90,13 +89,20 @@ export function Trip() {
               {t.playerIds.map((pid) => (
                 <div key={pid} className="pname" style={{ fontSize: 14, padding: "3px 0" }}>{ev.getPlayer(pid)?.name}</div>
               ))}
+              {t.nonScoringIds.length > 0 && (
+                <div style={{ marginTop: 8, paddingTop: 8, borderTop: "1px solid var(--color-hairline)" }}>
+                  {t.nonScoringIds.map((pid) => (
+                    <div key={pid} className="phcp" style={{ padding: "3px 0" }}>{ev.getPlayer(pid)?.name}</div>
+                  ))}
+                </div>
+              )}
             </div>
           ))}
         </div>
       ) : (
         <div className="prose" style={{ paddingTop: 4 }}>
-          Two teams of seven, to be announced. The fourball is split 2-2 and couples are split across
-          teams. The organiser picks and announces.
+          Two teams of six, to be announced — everyone on the trip belongs to one of them, whether
+          or not they score. The organiser picks and reveals.
         </div>
       )}
 

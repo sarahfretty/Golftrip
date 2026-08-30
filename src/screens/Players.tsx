@@ -12,8 +12,9 @@ export function Players() {
     navigate("/");
   };
 
-  const golfers = players.filter((p) => p.competing);
-  const attendees = players.filter((p) => !p.competing);
+  // Everyone with an index tees off — including Catherine, whose card is kept but not scored.
+  const golfers = players.filter((p) => p.index !== null);
+  const attendees = players.filter((p) => p.index === null);
 
   return (
     <div className="screen">
@@ -31,7 +32,7 @@ export function Players() {
               <div className="pname">{p.name}</div>
               <div className="phcp">{p.fullName}{p.organiser ? " · Organiser" : ""}</div>
             </div>
-            <span className="phcp">{p.gender === "F" ? "Red" : "Yellow"} · {p.index}</span>
+            <span className="phcp">{p.gender === "F" ? "Red" : "Yellow"} · {p.competing ? p.index : "not scored"}</span>
           </button>
         ))}
       </div>
@@ -41,7 +42,7 @@ export function Players() {
         {attendees.map((p) => (
           <button key={p.id} className="row" onClick={() => choose(p.id)} aria-pressed={p.id === currentPlayerId}>
             <div className="pname">{p.name}</div>
-            <span className="phcp">Not competing</span>
+            <span className="phcp">Not playing</span>
           </button>
         ))}
       </div>

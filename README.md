@@ -47,7 +47,7 @@ in your browser's `localStorage`. To reset, use the organiser console's "Reset a
 | `npm run dev` | Dev server with HMR |
 | `npm run build` | Type-check (`tsc -b`) then production build to `dist/` |
 | `npm run preview` | Serve the production build locally |
-| `npm test` | Run the scoring-engine test suite (38 tests) |
+| `npm test` | Run the scoring-engine test suite (61 tests) |
 | `npm run coverage` | Tests with coverage |
 | `npm run lint` | oxlint |
 | `npm run db:seed` | Seed a Supabase project from the source-of-truth data (needs env, see docs) |
@@ -59,7 +59,7 @@ src/
   domain/
     types.ts            Core domain types (event-agnostic)
     scoring.ts          The scoring engine — handicaps, Stableford, best-2-of-3, validation
-    scoring.test.ts     38 tests, incl. the club-validated 14×3 handicap table
+    scoring.test.ts     61 tests, incl. the club-validated 13×3 handicap table
   data/
     belek-cup-2026.ts   Single source of truth for the event (courses, players, rounds…)
   store/

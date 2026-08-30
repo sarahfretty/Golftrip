@@ -128,17 +128,30 @@ function TeamsControl() {
   const competing = ev.players.filter((p) => p.competing);
   const teamOf = (pid: string) => ev.teams.find((t) => t.playerIds.includes(pid))?.id;
 
-  const assign = (pid: string, teamId: string | null) => {
-    const next: Team[] = ev.teams.map((t) => ({ ...t, playerIds: t.playerIds.filter((id) => id !== pid) }));
-    if (teamId) next.find((t) => t.id === teamId)!.playerIds.push(pid);
+  // Everyone on the trip who isn't scoring: golfers who play unscored, and attendees.
+  const others = ev.players.filter((p) => !p.competing);
+
+  const assign = (pid: string, teamId: string | null, scoring: boolean) => {
+    const key = scoring ? "playerIds" : "nonScoringIds";
+    // Strip them from both lists on both teams first, so nobody can end up in two places.
+    const next: Team[] = ev.teams.map((t) => ({
+      ...t,
+      playerIds: t.playerIds.filter((id) => id !== pid),
+      nonScoringIds: t.nonScoringIds.filter((id) => id !== pid),
+    }));
+    if (teamId) next.find((t) => t.id === teamId)![key].push(pid);
     ev.setTeams(next);
   };
+  const teamOfOther = (pid: string) => ev.teams.find((t) => t.nonScoringIds.includes(pid))?.id;
+  const othersPicked = ev.teams.reduce((n, t) => n + t.nonScoringIds.length, 0);
 
-  const warnings = validateTeams(ev.teams, ev.couples, ev.lockedFourball);
+  const warnings = validateTeams(ev.teams, ev.couples, ev.lockedGroupIds);
+  const picked = ev.teams.reduce((n, t) => n + t.playerIds.length, 0);
+  const allPicked = picked === competing.length;
 
   return (
     <>
-      <div className="sec"><div className="sec-label">Teams — two of seven</div></div>
+      <div className="sec"><div className="sec-label">Teams — six a side</div></div>
       {warnings.map((w, i) => <div key={i} className="banner" style={{ margin: "0 16px 8px", borderLeftColor: "var(--gold-600)" }}>{w}</div>)}
       <div className="rows">
         {competing.map((p) => {
@@ -147,20 +160,63 @@ function TeamsControl() {
             <div key={p.id} className="row">
               <div className="spread" style={{ gap: 8, justifyContent: "flex-start" }}>
                 <span className="pname">{p.name}</span>
-                {p.lockedGroup && <span className="tag">4B</span>}
+                {p.lockedGroup && <span className="tag">3B</span>}
               </div>
               <div className="score-grid" style={{ gridTemplateColumns: "repeat(3,44px)", width: "auto" }}>
                 {ev.teams.map((team) => (
                   <button key={team.id} className={`sbtn${t === team.id ? " selected" : ""}`} style={{ minHeight: 38, fontSize: 12 }}
-                    onClick={() => assign(p.id, t === team.id ? null : team.id)}>
-                    {team.name.replace("Team ", "")}
+                    onClick={() => assign(p.id, t === team.id ? null : team.id, true)}>
+                    {team.name}
                   </button>
                 ))}
-                <button className={`sbtn${!t ? " selected" : ""}`} style={{ minHeight: 38, fontSize: 12 }} onClick={() => assign(p.id, null)}>—</button>
+                <button className={`sbtn${!t ? " selected" : ""}`} style={{ minHeight: 38, fontSize: 12 }} onClick={() => assign(p.id, null, true)}>—</button>
               </div>
             </div>
           );
         })}
+      </div>
+      <div className="sec"><div className="sec-label">Everyone else — on a team, not scoring</div></div>
+      <div className="rows">
+        {others.map((p) => {
+          const t = teamOfOther(p.id);
+          return (
+            <div key={p.id} className="row">
+              <div className="spread" style={{ gap: 8, justifyContent: "flex-start" }}>
+                <span className="pname">{p.name}</span>
+                <span className="tag">{p.index !== null ? "Plays" : "Attendee"}</span>
+              </div>
+              <div className="score-grid" style={{ gridTemplateColumns: "repeat(3,44px)", width: "auto" }}>
+                {ev.teams.map((team) => (
+                  <button key={team.id} className={`sbtn${t === team.id ? " selected" : ""}`} style={{ minHeight: 38, fontSize: 12 }}
+                    onClick={() => assign(p.id, t === team.id ? null : team.id, false)}>
+                    {team.name}
+                  </button>
+                ))}
+                <button className={`sbtn${!t ? " selected" : ""}`} style={{ minHeight: 38, fontSize: 12 }} onClick={() => assign(p.id, null, false)}>—</button>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+      <div className="prose">
+        <div className="phcp" style={{ paddingBottom: 8 }}>
+          {ev.teamsRevealed
+            ? "The teams are showing on everyone's Trip tab."
+            : `Hidden from everyone until you reveal them. ${picked} of ${competing.length} scoring picked, ${othersPicked} of ${others.length} others.`}
+        </div>
+        {ev.teamsRevealed ? (
+          <button className="btn-ghost" onClick={() => ev.setTeamsRevealed(false)}>Hide the teams again</button>
+        ) : (
+          <button
+            className="btn btn-gold"
+            disabled={!allPicked}
+            onClick={() => {
+              if (confirm("Reveal the teams to everyone on the Trip tab?")) ev.setTeamsRevealed(true);
+            }}
+          >
+            <span>Reveal the teams</span><span aria-hidden>→</span>
+          </button>
+        )}
       </div>
     </>
   );
@@ -189,7 +245,9 @@ function SidePrizesControl() {
                   onChange={(e) => ev.setSidePrize(r.id, c.id, sp?.hole ?? 0, e.target.value || null)}
                 >
                   <option value="">— winner —</option>
-                  {ev.players.filter((p) => p.competing).map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
+                  {ev.players
+                    .filter((p) => p.index !== null && (!c.gender || p.gender === c.gender))
+                    .map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
                 </select>
               </div>
             );

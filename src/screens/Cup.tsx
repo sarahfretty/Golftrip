@@ -8,7 +8,7 @@ import type { Player } from "../domain/types";
 // to what is displayed until an organiser declares it — anticipation without false info.
 export function Cup() {
   const ev = useEvent();
-  const compRounds = ev.rounds.filter((r) => !r.demo);
+  const compRounds = ev.rounds;
   const declared = compRounds.filter((r) => r.status === "declared" || r.status === "locked");
   const sealed = compRounds.filter((r) => r.status === "sealed");
 
@@ -25,8 +25,7 @@ export function Cup() {
   const ladiesOoM = orderOfMerit(totalsFor(ladies), n);
   const mensOoM = orderOfMerit(totalsFor(men), n);
   const allTotals = { ...totalsFor(ladies), ...totalsFor(men) };
-  const teamsPicked = ev.teams.some((t) => t.playerIds.length > 0);
-  const teamCup = teamsPicked ? teamStandings(ev.teams, allTotals, n) : [];
+  const teamCup = ev.teamsRevealed ? teamStandings(ev.teams, allTotals, n) : [];
 
   return (
     <div className="screen">
@@ -40,8 +39,6 @@ export function Cup() {
           <Shield size={48} />
         </div>
       </header>
-
-      <WarmUp />
 
       {declared.length === 0 ? (
         <div className="center-col grow">
@@ -60,22 +57,34 @@ export function Cup() {
           )}
 
           <Board title="The Team Cup">
-            {!teamsPicked ? (
-              <div className="prose">Teams not yet picked. The organiser assigns two teams of seven — the
-                fourball split 2-2, couples split — and the Team Cup appears here.</div>
+            {!ev.teamsRevealed ? (
+              <div className="prose">Teams not yet revealed. The organiser picks two teams of six
+                and the Team Cup appears here.</div>
             ) : (
-              <table className="table">
-                <thead><tr><th>#</th><th>Team</th><th className="num">Points</th></tr></thead>
-                <tbody>
-                  {teamCup.map((row, i) => (
-                    <tr key={row.teamId}>
-                      <td>{i + 1}</td>
-                      <td>{ev.teams.find((t) => t.id === row.teamId)?.name}</td>
-                      <td className="num"><strong>{row.total}</strong></td>
+              <>
+                <div className="prose" style={{ paddingTop: 0, paddingBottom: 10 }}>
+                  <span className="phcp">Best five cards each round · best 2 of 3 rounds count</span>
+                </div>
+                <table className="table">
+                  <thead>
+                    <tr>
+                      <th>#</th><th>Team</th>
+                      {declared.map((r) => <th key={r.id} className="num">R{r.number}</th>)}
+                      <th className="num">Points</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
+                  </thead>
+                  <tbody>
+                    {teamCup.map((row, i) => (
+                      <tr key={row.teamId}>
+                        <td>{i + 1}</td>
+                        <td>{ev.teams.find((t) => t.id === row.teamId)?.name}</td>
+                        {declared.map((r, ri) => <td key={r.id} className="num">{row.roundScores[ri] ?? "—"}</td>)}
+                        <td className="num"><strong>{row.total}</strong></td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </>
             )}
           </Board>
 
@@ -96,32 +105,6 @@ export function Cup() {
 
 // The warm-up (demo) round gets its own single-round leaderboard, shown once declared —
 // so the full flow (enter → sign → declare → standings) can be demoed without touching the Cup.
-function WarmUp() {
-  const ev = useEvent();
-  const demo = ev.rounds.find((r) => r.demo && ["scoring", "declared", "locked"].includes(r.status));
-  if (!demo) return null;
-  const course = ev.getCourse(demo.courseId);
-  const rows = ev.players
-    .filter((p) => p.competing)
-    .map((p) => ({ p, pts: ev.pointsFor(demo.id, p.id), played: ev.cardFor(demo.id, p.id).strokes.some((s) => s !== null) }))
-    .filter((r) => r.played)
-    .sort((a, b) => b.pts - a.pts);
-  if (rows.length === 0) return null;
-  return (
-    <>
-      <div className="banner banner-gold">Warm-up · {course?.name} — a practice round, not part of the Cup.</div>
-      <div className="sec"><div className="sec-label">Warm-up leaderboard · {course?.name}</div></div>
-      <table className="table">
-        <thead><tr><th>#</th><th>Player</th><th className="num">Points</th></tr></thead>
-        <tbody>
-          {rows.map((r, i) => (
-            <tr key={r.p.id}><td>{i + 1}</td><td>{r.p.name}</td><td className="num"><strong>{r.pts}</strong></td></tr>
-          ))}
-        </tbody>
-      </table>
-    </>
-  );
-}
 
 function Board({ title, children }: { title: string; children: ReactNode }) {
   return (
