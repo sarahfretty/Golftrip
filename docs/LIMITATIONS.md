@@ -41,7 +41,7 @@ of scope for v1.
 
 ## Testing & tooling
 
-9. **Engine is unit-tested (61 tests); the UI is not yet covered by automated E2E tests.** A
+9. **Engine is unit-tested (64 tests); the UI is not yet covered by automated E2E tests.** A
    Playwright smoke test of the score-entry → declare → leaderboard path would be a good add.
 10. **Node version:** Vite 8 wants Node 20.19+ or 22.12+. `.nvmrc` pins `20.19.0` for CI; a
     local 22.11 install only prints a warning.

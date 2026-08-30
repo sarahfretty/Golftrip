@@ -63,7 +63,12 @@ export function Cup() {
             ) : (
               <>
                 <div className="prose" style={{ paddingTop: 0, paddingBottom: 10 }}>
-                  <span className="phcp">Best five cards each round · best 2 of 3 rounds count</span>
+                  <span className="phcp">
+                    Best five cards each round ·{" "}
+                    {ev.event.countingRounds >= ev.rounds.length
+                      ? "every round counts"
+                      : `best ${ev.event.countingRounds} of ${ev.rounds.length} rounds count`}
+                  </span>
                 </div>
                 <table className="table">
                   <thead>
@@ -130,7 +135,9 @@ function StandingsTable({
           <th>#</th>
           <th>Player</th>
           {Array.from({ length: declaredCount }, (_, i) => <th key={i} className="num">R{i + 1}</th>)}
-          <th className="num">Best {Math.min(ev.event.countingRounds, declaredCount)}</th>
+          <th className="num">
+            {ev.event.countingRounds >= declaredCount ? "Total" : `Best ${ev.event.countingRounds}`}
+          </th>
         </tr>
       </thead>
       <tbody>

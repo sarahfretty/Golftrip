@@ -126,7 +126,10 @@ function PreTrip({ days }: { days: number }) {
       <div className="prose">
         <div className="sec-label" style={{ marginBottom: 8 }}>The format, once</div>
         Individual Stableford, three rounds, {Math.round(ev.event.allowance * 100)}% of your course handicap.
-        Best {ev.event.countingRounds} of 3 count. Nearest the pin and longest drive each round, men's and ladies'.
+        {ev.event.countingRounds >= ev.rounds.length
+          ? " Every round counts."
+          : ` Best ${ev.event.countingRounds} of ${ev.rounds.length} count.`}{" "}
+        Nearest the pin and longest drive each round, men's and ladies'.
       </div>
       <div className="note">Nothing to enter yet. We'll wake up when you land.</div>
     </>

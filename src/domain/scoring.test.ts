@@ -15,7 +15,7 @@ import {
   validateHoles,
   validateTeams,
 } from "./scoring";
-import { COMPETITIONS, COUPLES, COURSES, PLAYERS, PLAYING, ROUNDS, TEAMS, LOCKED_GROUP_IDS, defaultTeeGroups } from "../data/belek-cup-2026";
+import { COMPETITIONS, COUPLES, COURSES, EVENT, PLAYERS, PLAYING, ROUNDS, TEAMS, LOCKED_GROUP_IDS, defaultTeeGroups } from "../data/belek-cup-2026";
 import type { Course, Player, TeeSet } from "./types";
 
 function teeFor(course: Course, player: Player): TeeSet {
@@ -441,5 +441,31 @@ describe("the seeded teams", () => {
 
   it("raise no balance warnings", () => {
     expect(validateTeams(TEAMS, COUPLES, LOCKED_GROUP_IDS)).toEqual([]);
+  });
+});
+
+describe("every round counts", () => {
+  it("the event and all three competitions drop nothing", () => {
+    expect(EVENT.countingRounds).toBe(3);
+    expect(EVENT.countingRounds).toBe(ROUNDS.length);
+    for (const c of COMPETITIONS.filter((x) => x.countingRounds !== undefined)) {
+      expect(c.countingRounds).toBe(ROUNDS.length);
+    }
+  });
+
+  it("a bad round can no longer be dropped from an individual total", () => {
+    // Best-3-of-3 is a plain sum: the 0 stays in.
+    expect(bestNTotal([31, 0, 29], 3)).toBe(60);
+    expect(bestNTotal([31, 0, 29], 2)).toBe(60); // unchanged: the 0 was dropped anyway
+    expect(bestNTotal([31, 12, 29], 3)).toBe(72);
+    expect(bestNTotal([31, 12, 29], 2)).toBe(60); // the old rule dropped the 12
+  });
+
+  it("a team keeps every round score too", () => {
+    const totals = { p1: [30, 5, 20], p2: [28, 5, 20], p3: [26, 5, 20],
+                     p4: [24, 5, 20], p5: [22, 5, 20], p6: [2, 5, 20] };
+    const [row] = teamStandings([{ id: "t", playerIds: ["p1","p2","p3","p4","p5","p6"] }], totals, 3);
+    expect(row.roundScores).toEqual([130, 25, 100]);
+    expect(row.total).toBe(255); // all three, including the poor middle round
   });
 });

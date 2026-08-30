@@ -131,7 +131,7 @@ export interface Competition {
   type: CompetitionType;
   /** For individual comps: which gender field competes. */
   gender?: Gender;
-  /** Best N of the event's rounds count (Belek: best 2 of 3). */
+  /** Best N of the event's rounds count (Belek: 3 of 3 — nothing is dropped). */
   countingRounds?: number;
 }
 

@@ -152,9 +152,9 @@ export const TEAMS: Team[] = [
 export const COUPLES: Couple[] = [];
 
 export const COMPETITIONS: Competition[] = [
-  { id: "team-cup", name: "The Team Cup", type: "team-stableford", countingRounds: 2 },
-  { id: "ladies-oom", name: "Ladies' Champion", type: "individual-stableford", gender: "F", countingRounds: 2 },
-  { id: "mens-oom", name: "Men's Champion", type: "individual-stableford", gender: "M", countingRounds: 2 },
+  { id: "team-cup", name: "The Team Cup", type: "team-stableford", countingRounds: 3 },
+  { id: "ladies-oom", name: "Ladies' Champion", type: "individual-stableford", gender: "F", countingRounds: 3 },
+  { id: "mens-oom", name: "Men's Champion", type: "individual-stableford", gender: "M", countingRounds: 3 },
   { id: "ntp-men", name: "Nearest the Pin — Men", type: "nearest-the-pin", gender: "M" },
   { id: "ntp-ladies", name: "Nearest the Pin — Ladies", type: "nearest-the-pin", gender: "F" },
   { id: "ld-men", name: "Longest Drive — Men", type: "longest-drive", gender: "M" },
@@ -176,7 +176,7 @@ export const EVENT = {
   endDate: "2026-09-14",
   ceremonyDate: "2026-09-13",
   allowance: 0.95,
-  countingRounds: 2,
+  countingRounds: 3, // every round counts — no round is dropped (decided 30 Aug 2026)
   hotel: { name: "Regnum Carya", nights: 7, board: "All Inclusive Plus" },
   flights: {
     out: { carrier: "Jet2", flightNo: "LS653", from: "EMA", to: "AYT", date: "2026-09-07", depart: "13:00", arrive: "19:25", duration: "4h 25m" },
