@@ -45,10 +45,10 @@ argued-about.
 
 ## Open decisions for the organisers
 
-- **Catherine's handicap** is provisional (45.0). It's stored as `indexProvisional` and can be
-  changed in the data before the trip. See `data/courses.md` for the three options discussed.
-- **Teams** are seeded in the data (Gold, 7 people; Aqua, 8 — six scorers each) and editable
-  in the Console.
+- **Catherine's handicap is confirmed at 45.0** (31 Aug 2026) and her card now counts, so she
+  is one of the thirteen scoring golfers.
+- **Teams** are seeded in the data (Gold, 7 people / 6 scoring; Aqua, 8 people / 7 scoring)
+  and editable in the Console. The sides are uneven — see LIMITATIONS.md.
   They stay hidden from everyone until you reveal them.
 - **Couples are deliberately not split** across the teams — the rule was tried and dropped
   (30 Aug 2026), so `COUPLES` in `src/data/belek-cup-2026.ts` stays empty and that warning

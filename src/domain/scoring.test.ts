@@ -266,10 +266,11 @@ describe("team balance validation", () => {
 describe("who counts and who plays", () => {
   const byId = (id: string) => PLAYERS.find((p) => p.id === id)!;
 
-  it("Catherine plays every round but is not in the scoring field", () => {
+  it("Catherine plays and her card now counts, off 45", () => {
     const catherine = byId("catherine");
-    expect(catherine.index).not.toBeNull(); // her card is still handicapped and recorded
-    expect(catherine.competing).toBe(false);
+    expect(catherine.index).toBe(45.0);
+    expect(catherine.competing).toBe(true);
+    expect(catherine.indexProvisional).toBeUndefined(); // 45 confirmed 31 Aug 2026
     expect(PLAYING.map((p) => p.id)).toContain("catherine");
     for (const r of ROUNDS) {
       const inAGroup = defaultTeeGroups()
@@ -287,10 +288,10 @@ describe("who counts and who plays", () => {
     }
   });
 
-  it("twelve golfers score, split six a side", () => {
+  it("thirteen golfers score — an odd field, so the sides cannot be equal", () => {
     const scoring = PLAYERS.filter((p) => p.competing);
-    expect(scoring.length).toBe(12);
-    expect(scoring.length % 2).toBe(0);
+    expect(scoring.length).toBe(13);
+    expect(scoring.length % 2).toBe(1);
   });
 
   it("nearest the pin and longest drive are each played for by men and ladies separately", () => {
@@ -389,16 +390,17 @@ describe("Team Cup counts the best five cards a round", () => {
 });
 
 describe("the seeded teams", () => {
-  it("are six a side and cover every scoring golfer exactly once", () => {
+  it("cover every scoring golfer exactly once, as close to even as thirteen allows", () => {
     const scoring = PLAYERS.filter((p) => p.competing).map((p) => p.id).sort();
     const picked = TEAMS.flatMap((t) => t.playerIds);
-    expect(TEAMS.map((t) => t.playerIds.length)).toEqual([6, 6]);
+    const sizes = TEAMS.map((t) => t.playerIds.length).sort();
+    expect(sizes).toEqual([6, 7]);
     expect([...picked].sort()).toEqual(scoring);
     expect(new Set(picked).size).toBe(picked.length); // nobody on both teams
   });
 
-  it("leave Catherine out of the scoring six — she plays but doesn't score", () => {
-    expect(TEAMS.flatMap((t) => t.playerIds)).not.toContain("catherine");
+  it("count Catherine among the scorers", () => {
+    expect(TEAMS.flatMap((t) => t.playerIds)).toContain("catherine");
   });
 
   it("put nobody in two places at once", () => {
@@ -406,11 +408,11 @@ describe("the seeded teams", () => {
     expect(new Set(everyone).size).toBe(everyone.length);
   });
 
-  it("are seven and eight people, six scorers each", () => {
+  it("are seven and eight people, thirteen of them scoring", () => {
     const sizes = TEAMS.map((t) => t.playerIds.length + t.nonScoringIds.length).sort();
     expect(sizes).toEqual([7, 8]);
     expect(sizes[0] + sizes[1]).toBe(PLAYERS.length); // fifteen travellers
-    expect(TEAMS.map((t) => t.playerIds.length)).toEqual([6, 6]);
+    expect(TEAMS.reduce((n, t) => n + t.playerIds.length, 0)).toBe(13);
   });
 
   it("place every single traveller on a team", () => {
@@ -418,7 +420,7 @@ describe("the seeded teams", () => {
     expect(onATeam).toEqual(PLAYERS.map((p) => p.id).sort());
   });
 
-  it("keep the non-scoring members out of the scoring six", () => {
+  it("keep the non-scoring members out of the scoring list", () => {
     for (const t of TEAMS) {
       for (const id of t.nonScoringIds) {
         expect(PLAYERS.find((p) => p.id === id)!.competing).toBe(false);
@@ -436,14 +438,14 @@ describe("the seeded teams", () => {
     expect(bare[0].contributions.map((c) => c.playerId)).not.toContain("ghost");
   });
 
-  it("split the locked ladies' scorers across the two teams", () => {
-    const scoringLocked = LOCKED_GROUP_IDS.filter(
-      (id: string) => PLAYERS.find((p) => p.id === id)!.competing,
-    );
-    const teamsUsed = new Set(
-      scoringLocked.map((id: string) => TEAMS.find((t) => t.playerIds.includes(id))!.id),
-    );
-    expect(teamsUsed.size).toBe(scoringLocked.length);
+  it("split the locked threeball as evenly as three allows", () => {
+    const perTeam = new Map<string, number>();
+    for (const id of LOCKED_GROUP_IDS as readonly string[]) {
+      const team = TEAMS.find((t) => t.playerIds.includes(id));
+      if (team) perTeam.set(team.id, (perTeam.get(team.id) ?? 0) + 1);
+    }
+    const counts = [...perTeam.values()].sort();
+    expect(counts).toEqual([1, 2]); // never all three together
   });
 
   it("raise no balance warnings", () => {

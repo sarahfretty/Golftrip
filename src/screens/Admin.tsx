@@ -154,7 +154,7 @@ function TeamsControl() {
 
   return (
     <>
-      <div className="sec"><div className="sec-label">Teams — six scorers a side</div></div>
+      <div className="sec"><div className="sec-label">Teams — whose card counts</div></div>
       {warnings.map((w, i) => <div key={i} className="banner" style={{ margin: "0 16px 8px", borderLeftColor: "var(--gold-600)" }}>{w}</div>)}
       <div className="rows">
         {competing.map((p) => {

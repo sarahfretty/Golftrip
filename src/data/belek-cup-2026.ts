@@ -120,13 +120,7 @@ export const PLAYERS: Player[] = [
   player("jo-irving", "Jo I", "Jo Irving", "F", "red", 23.5),
   player("debs", "Debs", "Debs Dugher", "F", "red", 26.0, { lockedGroup: LOCKED }),
   player("jo-campbell", "Jo C", "Jo Campbell", "F", "red", 36.5),
-  player("catherine", "Catherine", "Catherine Bailey", "F", "red", 45.0, {
-    lockedGroup: LOCKED,
-    indexProvisional: true,
-    // Plays every round and her card is recorded, but her scores are not in the
-    // championships or the Team Cup. Side prizes are still open to her.
-    competing: false,
-  }),
+  player("catherine", "Catherine", "Catherine Bailey", "F", "red", 45.0, { lockedGroup: LOCKED }),
   // Attendees — don't play at all
   player("graham", "Graham", "Graham", "M", "yellow", null),
   player("michelle", "Michelle", "Michelle", "F", "red", null),
@@ -138,13 +132,13 @@ export const PLAYING = PLAYERS.filter((p) => p.index !== null);
 /** The ladies' group, locked together every round. */
 export const LOCKED_GROUP_IDS = PLAYERS.filter((p) => p.lockedGroup === LOCKED).map((p) => p.id);
 
-// The two teams, picked by the organiser (30 Aug 2026). All fifteen travellers belong to a
-// team: six of the twelve scoring golfers a side, plus everyone else in nonScoringIds —
-// Catherine plays unscored, Graham and Michelle don't play. So the teams are seven and eight
-// people, but six cards a side. Editable in the Console; hidden until the organiser reveals.
+// The two teams, picked by the organisers (31 Aug 2026). All fifteen travellers belong to a
+// team: the thirteen scoring golfers split seven (Aqua) and six (Gold), plus Graham and
+// Michelle in nonScoringIds — neither of them plays. Editable in the Console; hidden until
+// the organisers reveal them. NOTE the sides are uneven; see docs/LIMITATIONS.md.
 export const TEAMS: Team[] = [
-  { id: "team-gold", name: "Gold", playerIds: ["mark", "jim", "jane", "chris", "kathy", "jo-campbell"], nonScoringIds: ["michelle"] },
-  { id: "team-aqua", name: "Aqua", playerIds: ["martin", "paul", "sarah", "nicky", "jo-irving", "debs"], nonScoringIds: ["catherine", "graham"] },
+  { id: "team-gold", name: "Gold", playerIds: ["mark", "jim", "jane", "chris", "debs", "jo-campbell"], nonScoringIds: ["graham"] },
+  { id: "team-aqua", name: "Aqua", playerIds: ["martin", "paul", "sarah", "nicky", "jo-irving", "kathy", "catherine"], nonScoringIds: ["michelle"] },
 ];
 
 // Couples are NOT split across the teams — the organisers tried it and it didn't work

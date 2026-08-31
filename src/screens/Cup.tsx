@@ -59,7 +59,7 @@ export function Cup() {
           <Board title="The Team Cup">
             {!ev.teamsRevealed ? (
               <div className="prose">Teams not yet revealed. The organisers pick the two teams —
-                six golfers a side score — and the Team Cup appears here.</div>
+                best five cards a side each round — and the Team Cup appears here.</div>
             ) : (
               <>
                 <div className="prose" style={{ paddingTop: 0, paddingBottom: 10 }}>

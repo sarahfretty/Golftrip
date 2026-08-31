@@ -17,6 +17,25 @@ of scope for v1.
    should use **Supabase Auth** (the `organisers` table + `is_organiser()` already exist); the
    Supabase sign-in UI is not yet built.
 
+## The teams are uneven, and it favours Aqua
+
+Thirteen golfers score, so the sides are **seven (Aqua) and six (Gold)**. The Team Cup counts
+each side's best five cards a round, which means Aqua discards its two worst cards each round
+while Gold discards only one. More cards to choose from is worth real points.
+
+Simulated over 200,000 rounds, treating every player's Stableford as an equal draw (which is
+what the 95% allowance is for), Aqua gains roughly **4.6 points a round — about 14 across the
+Cup**, now that all three rounds count. It is not decisive: Gold still wins about 31% of the
+time. But it is a structural head start, not a golfing one.
+
+**The organisers know and have accepted this** (31 Aug 2026): thirteen play, the sides cannot
+be even, and the trip is not being reshaped around it. Recorded here so it is a known trade-off
+rather than a bug someone rediscovers mid-week.
+
+If it is ever revisited, the options are to even the sides, to count best five of six for both
+(Aqua nominating six eligible cards a round), or to drop each side's worst card and compare
+averages — the last is exactly fair with no admin.
+
 ## Deferred features (scoped but not built)
 
 3. **Ceremony Mode.** The final round seals and the Cup tab shows declared standings, but the
