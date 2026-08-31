@@ -28,7 +28,7 @@ argued-about.
 | Section | Action |
 |---|---|
 | **Rounds** | Set a round to Scoring / Declare / Seal / Lock / Reopen. Declare publishes standings; Seal withholds them; Lock freezes the round. |
-| **Teams** | Assign the two teams of six, then put everyone who isn't scoring — Catherine, and the attendees — on a team underneath. Live warnings flag an uneven split and the ladies' locked scorers not split across both. Teams stay hidden from everyone until you tap **Reveal the teams**; **Hide the teams again** puts them back. |
+| **Teams** | Assign six scorers a side, then put everyone who isn't scoring — Catherine, and the attendees — on a team underneath, so all fifteen belong somewhere. Live warnings flag an uneven split and the ladies' locked scorers not split across both. Teams stay hidden from everyone until you tap **Reveal the teams**; **Hide the teams again** puts them back. |
 | **Side prizes** | Record the Nearest-the-Pin and Longest-Drive winner for each round. |
 | **Correct a card** | Change any hole's score. The change is written to the card's audit trail (from → to, by whom, when) and shown to everyone. |
 | **Announcement** | Post a message to everyone; it appears on the Trip tab. |
@@ -47,7 +47,8 @@ argued-about.
 
 - **Catherine's handicap** is provisional (45.0). It's stored as `indexProvisional` and can be
   changed in the data before the trip. See `data/courses.md` for the three options discussed.
-- **Teams** are seeded in the data (Gold and Aqua, six a side) and editable in the Console.
+- **Teams** are seeded in the data (Gold, 7 people; Aqua, 8 — six scorers each) and editable
+  in the Console.
   They stay hidden from everyone until you reveal them.
 - **Couples are deliberately not split** across the teams — the rule was tried and dropped
   (30 Aug 2026), so `COUPLES` in `src/data/belek-cup-2026.ts` stays empty and that warning

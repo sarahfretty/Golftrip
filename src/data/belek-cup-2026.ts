@@ -138,9 +138,10 @@ export const PLAYING = PLAYERS.filter((p) => p.index !== null);
 /** The ladies' group, locked together every round. */
 export const LOCKED_GROUP_IDS = PLAYERS.filter((p) => p.lockedGroup === LOCKED).map((p) => p.id);
 
-// The two teams, picked by the organiser (30 Aug 2026): six a side from the twelve golfers
-// who score, plus everyone else on the trip in nonScoringIds — Catherine plays unscored,
-// Graham and Michelle don't play. Editable in the Console; hidden until the organiser reveals.
+// The two teams, picked by the organiser (30 Aug 2026). All fifteen travellers belong to a
+// team: six of the twelve scoring golfers a side, plus everyone else in nonScoringIds —
+// Catherine plays unscored, Graham and Michelle don't play. So the teams are seven and eight
+// people, but six cards a side. Editable in the Console; hidden until the organiser reveals.
 export const TEAMS: Team[] = [
   { id: "team-gold", name: "Gold", playerIds: ["mark", "jim", "jane", "chris", "kathy", "jo-campbell"], nonScoringIds: ["michelle"] },
   { id: "team-aqua", name: "Aqua", playerIds: ["martin", "paul", "sarah", "nicky", "jo-irving", "debs"], nonScoringIds: ["catherine", "graham"] },

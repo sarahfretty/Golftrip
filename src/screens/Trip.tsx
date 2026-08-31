@@ -101,8 +101,8 @@ export function Trip() {
         </div>
       ) : (
         <div className="prose" style={{ paddingTop: 4 }}>
-          Two teams of six, to be announced — everyone on the trip belongs to one of them, whether
-          or not they score. The organiser picks and reveals.
+          Two teams, to be announced. All fifteen of us belong to one, and six golfers a side
+          count for the Cup. The organisers pick the two teams and reveal them.
         </div>
       )}
 

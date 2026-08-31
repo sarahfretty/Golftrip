@@ -32,9 +32,12 @@ export function Admin() {
               onChange={(e) => { setPin(e.target.value); setErr(false); }}
               onKeyDown={(e) => { if (e.key === "Enter") submit(); }}
               autoComplete="off"
+              autoCapitalize="none"
+              autoCorrect="off"
+              spellCheck={false}
             />
           </div>
-          {err && <div style={{ color: "var(--color-danger)", fontSize: 14 }}>Wrong PIN. Try again.</div>}
+          {err && <div style={{ color: "var(--color-danger)", fontSize: 14 }}>Wrong PIN. Try again — capitals don't matter.</div>}
           <button className="btn" onClick={submit}><span>Sign in</span><span aria-hidden>→</span></button>
           <button className="btn-ghost" onClick={() => navigate("/")}>Back</button>
         </div>
@@ -151,7 +154,7 @@ function TeamsControl() {
 
   return (
     <>
-      <div className="sec"><div className="sec-label">Teams — six a side</div></div>
+      <div className="sec"><div className="sec-label">Teams — six scorers a side</div></div>
       {warnings.map((w, i) => <div key={i} className="banner" style={{ margin: "0 16px 8px", borderLeftColor: "var(--gold-600)" }}>{w}</div>)}
       <div className="rows">
         {competing.map((p) => {

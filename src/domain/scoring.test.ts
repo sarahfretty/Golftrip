@@ -406,6 +406,13 @@ describe("the seeded teams", () => {
     expect(new Set(everyone).size).toBe(everyone.length);
   });
 
+  it("are seven and eight people, six scorers each", () => {
+    const sizes = TEAMS.map((t) => t.playerIds.length + t.nonScoringIds.length).sort();
+    expect(sizes).toEqual([7, 8]);
+    expect(sizes[0] + sizes[1]).toBe(PLAYERS.length); // fifteen travellers
+    expect(TEAMS.map((t) => t.playerIds.length)).toEqual([6, 6]);
+  });
+
   it("place every single traveller on a team", () => {
     const onATeam = TEAMS.flatMap((t) => [...t.playerIds, ...t.nonScoringIds]).sort();
     expect(onATeam).toEqual(PLAYERS.map((p) => p.id).sort());
@@ -493,5 +500,23 @@ describe("the travel-day coach notice", () => {
     expect(COACH.stops.map((s) => s.place)).toEqual([
       "Wheatley Golf Club", "Sprotbrough, Ivanhoe", "Cadeby Village",
     ]);
+  });
+});
+
+describe("organiser PIN matching", () => {
+  // Mirrors the comparison in store.tsx: case and surrounding space must not matter.
+  const matches = (entered: string, pin: string) =>
+    entered.trim().toLowerCase() === pin.trim().toLowerCase();
+
+  it("accepts the PIN however a phone keyboard mangles the case", () => {
+    for (const typed of ["belek2026", "Belek2026", "BELEK2026", " belek2026 ", "BeLeK2026"]) {
+      expect(matches(typed, "belek2026")).toBe(true);
+    }
+  });
+
+  it("still rejects a genuinely wrong PIN", () => {
+    for (const typed of ["belek2025", "belek", "2026", ""]) {
+      expect(matches(typed, "belek2026")).toBe(false);
+    }
   });
 });

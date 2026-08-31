@@ -307,7 +307,9 @@ export function EventProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const loginOrganiser = useCallback((pin: string): boolean => {
-    const ok = pin.trim() === ORGANISER_PIN;
+    // Forgiving on case and stray spaces: a phone keyboard capitalising the first letter
+    // was silently rejecting a correct PIN. It guards a trip console, not a bank.
+    const ok = pin.trim().toLowerCase() === ORGANISER_PIN.trim().toLowerCase();
     if (ok) {
       setIsOrganiser(true);
       sessionStorage.setItem(STORAGE_KEY + ":org", "1");

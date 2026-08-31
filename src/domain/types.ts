@@ -59,7 +59,7 @@ export interface Player {
 export interface Team {
   id: Id;
   name: string;
-  /** Whose cards score for this team. Two teams of six, assigned by the organiser. */
+  /** Whose cards score for this team — six a side, assigned by the organiser. */
   playerIds: Id[];
   /**
    * The rest of the team: everyone who belongs to it but whose card never counts —
