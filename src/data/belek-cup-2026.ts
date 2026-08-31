@@ -133,7 +133,7 @@ export const PLAYING = PLAYERS.filter((p) => p.index !== null);
 export const LOCKED_GROUP_IDS = PLAYERS.filter((p) => p.lockedGroup === LOCKED).map((p) => p.id);
 
 // The two teams, picked by the organisers (31 Aug 2026). All fifteen travellers belong to a
-// team: the thirteen scoring golfers split seven (Aqua) and six (Gold), plus Graham and
+// team: the thirteen scoring golfers split seven (Gold) and six (Aqua), plus Graham and
 // Michelle in nonScoringIds — neither of them plays. Editable in the Console; hidden until
 // the organisers reveal them. NOTE the sides are uneven; see docs/LIMITATIONS.md.
 /**
@@ -149,8 +149,8 @@ export const LOCKED_GROUP_IDS = PLAYERS.filter((p) => p.lockedGroup === LOCKED).
 export const TEAMS_REVEALED = true;
 
 export const TEAMS: Team[] = [
-  { id: "team-gold", name: "Gold", captainId: "jane", playerIds: ["mark", "jim", "jane", "chris", "debs", "jo-campbell"], nonScoringIds: ["graham"] },
-  { id: "team-aqua", name: "Aqua", captainId: "sarah", playerIds: ["martin", "paul", "sarah", "nicky", "jo-irving", "kathy", "catherine"], nonScoringIds: ["michelle"] },
+  { id: "team-gold", name: "Gold", captainId: "jane", playerIds: ["mark", "jim", "jane", "chris", "debs", "jo-campbell", "catherine"], nonScoringIds: ["graham"] },
+  { id: "team-aqua", name: "Aqua", captainId: "sarah", playerIds: ["martin", "paul", "sarah", "nicky", "jo-irving", "kathy"], nonScoringIds: ["michelle"] },
 ];
 
 // Couples are NOT split across the teams — the organisers tried it and it didn't work
