@@ -136,6 +136,18 @@ export const LOCKED_GROUP_IDS = PLAYERS.filter((p) => p.lockedGroup === LOCKED).
 // team: the thirteen scoring golfers split seven (Aqua) and six (Gold), plus Graham and
 // Michelle in nonScoringIds — neither of them plays. Editable in the Console; hidden until
 // the organisers reveal them. NOTE the sides are uneven; see docs/LIMITATIONS.md.
+/**
+ * Ship the teams as revealed to everyone.
+ *
+ * The local adapter persists per device, so an organiser tapping "Reveal the teams" in the
+ * Console only reveals them on that organiser's own phone. Shipping this as `true` is what
+ * reveals them for the whole trip. It deliberately overrides each device's saved value —
+ * every phone that has ever opened the app already has `teamsRevealed: false` stored from
+ * its first visit, and that must not win. Set back to false only if the teams need hiding
+ * again for everyone, which also needs a deploy. Supabase will make this a shared setting.
+ */
+export const TEAMS_REVEALED = true;
+
 export const TEAMS: Team[] = [
   { id: "team-gold", name: "Gold", captainId: "jane", playerIds: ["mark", "jim", "jane", "chris", "debs", "jo-campbell"], nonScoringIds: ["graham"] },
   { id: "team-aqua", name: "Aqua", captainId: "sarah", playerIds: ["martin", "paul", "sarah", "nicky", "jo-irving", "kathy", "catherine"], nonScoringIds: ["michelle"] },

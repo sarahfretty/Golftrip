@@ -9,8 +9,9 @@ of scope for v1.
 1. **Supabase data adapter.** The app runs on the local/offline adapter (`localStorage`), so
    every phone currently has its own copy of the data. **This includes the teams reveal**: an
    organiser tapping "Reveal the teams" only reveals them on that organiser's own phone.
-   Everyone else still sees "to be announced" until `TEAMS_REVEALED` in the seed is flipped
-   and the app redeployed. A shared, multi-phone leaderboard needs
+   Everyone else sees what `TEAMS_REVEALED` in the seed says at build time — it is currently
+   `true`, and it deliberately overrides each device's saved value, because every phone
+   persists `teamsRevealed: false` on its first visit. Hiding the teams again needs a deploy. A shared, multi-phone leaderboard needs
    the store (`src/store/store.tsx`) wired to Supabase — the schema, client, RLS, realtime
    publication and seed script are all in place; the store is shaped as the seam. This is the
    one thing to finish before the trip if more than one device enters scores. See
@@ -63,7 +64,7 @@ averages — the last is exactly fair with no admin.
 
 ## Testing & tooling
 
-9. **Engine is unit-tested (71 tests); the UI is not yet covered by automated E2E tests.** A
+9. **Engine is unit-tested (75 tests); the UI is not yet covered by automated E2E tests.** A
    Playwright smoke test of the score-entry → declare → leaderboard path would be a good add.
 10. **Node version:** Vite 8 wants Node 20.19+ or 22.12+. `.nvmrc` pins `20.19.0` for CI; a
     local 22.11 install only prints a warning.

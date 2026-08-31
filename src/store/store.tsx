@@ -27,6 +27,7 @@ import {
   PLAYERS,
   ROUNDS,
   TEAMS,
+  TEAMS_REVEALED,
   COUPLES,
   LOCKED_GROUP_IDS,
   defaultTeeGroups,
@@ -86,7 +87,7 @@ function initialState(): EventState {
   return {
     rounds: ROUNDS.map((r) => ({ ...r })),
     teams: TEAMS.map((t) => ({ ...t, playerIds: [...t.playerIds], nonScoringIds: [...t.nonScoringIds] })),
-    teamsRevealed: false,
+    teamsRevealed: TEAMS_REVEALED,
     teeGroups: defaultTeeGroups(),
     scorecards: {},
     sidePrizes: [],
@@ -128,7 +129,9 @@ function loadState(): EventState {
     return {
       rounds,
       teams,
-      teamsRevealed: parsed.teamsRevealed ?? base.teamsRevealed,
+      // The seed wins once a reveal has shipped: every device already persisted
+      // teamsRevealed:false on its first visit, so a saved false must not override it.
+      teamsRevealed: TEAMS_REVEALED || (parsed.teamsRevealed ?? false),
       teeGroups,
       scorecards: parsed.scorecards ?? base.scorecards,
       // Drop results for competitions that no longer exist (the side prizes were split by gender).

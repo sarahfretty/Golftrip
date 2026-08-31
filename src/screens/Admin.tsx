@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useEvent } from "../store/store";
+import { TEAMS_REVEALED } from "../data/belek-cup-2026";
 import { validateTeams, cardGross, formatGross } from "../domain/scoring";
 import type { HoleScore, RoundStatus, Team } from "../domain/types";
 
@@ -203,9 +204,11 @@ function TeamsControl() {
       </div>
       <div className="prose">
         <div className="phcp" style={{ paddingBottom: 8 }}>
-          {ev.teamsRevealed
-            ? "The teams are showing on everyone's Trip tab."
-            : `Hidden from everyone until you reveal them. ${picked} of ${competing.length} scoring picked, ${othersPicked} of ${others.length} others.`}
+          {TEAMS_REVEALED
+            ? "Revealed to everyone in this build. Hiding them again needs a deploy, not this button — until Supabase, each phone keeps its own copy."
+            : ev.teamsRevealed
+              ? "Showing on the Trip tab of THIS phone only. Everyone else still sees \"to be announced\" until a reveal is deployed."
+              : `Hidden. ${picked} of ${competing.length} scoring picked, ${othersPicked} of ${others.length} others.`}
         </div>
         {ev.teamsRevealed ? (
           <button className="btn-ghost" onClick={() => ev.setTeamsRevealed(false)}>Hide the teams again</button>

@@ -15,7 +15,7 @@ import {
   validateHoles,
   validateTeams,
 } from "./scoring";
-import { COACH, coachVisible, COMPETITIONS, COUPLES, COURSES, EVENT, PLAYERS, PLAYING, ROUNDS, TEAMS, LOCKED_GROUP_IDS, defaultTeeGroups } from "../data/belek-cup-2026";
+import { COACH, coachVisible, COMPETITIONS, COUPLES, COURSES, EVENT, PLAYERS, PLAYING, ROUNDS, TEAMS, TEAMS_REVEALED, LOCKED_GROUP_IDS, defaultTeeGroups } from "../data/belek-cup-2026";
 import type { Course, Player, TeeSet } from "./types";
 
 function teeFor(course: Course, player: Player): TeeSet {
@@ -535,5 +535,26 @@ describe("organiser PIN matching", () => {
     for (const typed of ["belek2025", "belek", "2026", ""]) {
       expect(matches(typed, "belek2026")).toBe(false);
     }
+  });
+});
+
+describe("the shipped reveal", () => {
+  // Mirrors the merge in store.tsx: a device's saved false must not beat a shipped reveal,
+  // because every phone persists teamsRevealed:false on its very first visit.
+  const resolve = (shipped: boolean, saved: boolean | undefined) => shipped || (saved ?? false);
+
+  it("is on, so the teams show for the whole trip", () => {
+    expect(TEAMS_REVEALED).toBe(true);
+  });
+
+  it("beats a stale false already saved on someone's phone", () => {
+    expect(resolve(true, false)).toBe(true);
+    expect(resolve(true, undefined)).toBe(true);
+  });
+
+  it("still lets an organiser reveal locally before one is shipped", () => {
+    expect(resolve(false, true)).toBe(true);
+    expect(resolve(false, false)).toBe(false);
+    expect(resolve(false, undefined)).toBe(false);
   });
 });
