@@ -137,8 +137,8 @@ export const LOCKED_GROUP_IDS = PLAYERS.filter((p) => p.lockedGroup === LOCKED).
 // Michelle in nonScoringIds — neither of them plays. Editable in the Console; hidden until
 // the organisers reveal them. NOTE the sides are uneven; see docs/LIMITATIONS.md.
 export const TEAMS: Team[] = [
-  { id: "team-gold", name: "Gold", playerIds: ["mark", "jim", "jane", "chris", "debs", "jo-campbell"], nonScoringIds: ["graham"] },
-  { id: "team-aqua", name: "Aqua", playerIds: ["martin", "paul", "sarah", "nicky", "jo-irving", "kathy", "catherine"], nonScoringIds: ["michelle"] },
+  { id: "team-gold", name: "Gold", captainId: "jane", playerIds: ["mark", "jim", "jane", "chris", "debs", "jo-campbell"], nonScoringIds: ["graham"] },
+  { id: "team-aqua", name: "Aqua", captainId: "sarah", playerIds: ["martin", "paul", "sarah", "nicky", "jo-irving", "kathy", "catherine"], nonScoringIds: ["michelle"] },
 ];
 
 // Couples are NOT split across the teams — the organisers tried it and it didn't work

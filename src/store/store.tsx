@@ -117,11 +117,13 @@ function loadState(): EventState {
     const teams = base.teams.map((t) => {
       const saved = parsed.teams?.find((x) => x.id === t.id);
       if (!saved) return t;
-      return {
-        ...t,
-        playerIds: saved.playerIds.filter((id) => known.has(id)),
-        nonScoringIds: (saved.nonScoringIds ?? t.nonScoringIds).filter((id) => known.has(id)),
-      };
+      const playerIds = saved.playerIds.filter((id) => known.has(id));
+      const nonScoringIds = (saved.nonScoringIds ?? t.nonScoringIds).filter((id) => known.has(id));
+      // A captain who has been moved off the team is no longer its captain.
+      const savedCaptain = saved.captainId ?? t.captainId;
+      const captainId =
+        savedCaptain && [...playerIds, ...nonScoringIds].includes(savedCaptain) ? savedCaptain : null;
+      return { ...t, playerIds, nonScoringIds, captainId };
     });
     return {
       rounds,

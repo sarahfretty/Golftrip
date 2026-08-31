@@ -87,7 +87,10 @@ export function Trip() {
             <div key={t.id} className="card">
               <div className="sec-label" style={{ marginBottom: 8 }}>{t.name}</div>
               {t.playerIds.map((pid) => (
-                <div key={pid} className="pname" style={{ fontSize: 14, padding: "3px 0" }}>{ev.getPlayer(pid)?.name}</div>
+                <div key={pid} className="spread" style={{ padding: "3px 0" }}>
+                  <span className="pname" style={{ fontSize: 14 }}>{ev.getPlayer(pid)?.name}</span>
+                  {pid === t.captainId && <span className="tag">Captain</span>}
+                </div>
               ))}
               {t.nonScoringIds.length > 0 && (
                 <div style={{ marginTop: 8, paddingTop: 8, borderTop: "1px solid var(--color-hairline)" }}>

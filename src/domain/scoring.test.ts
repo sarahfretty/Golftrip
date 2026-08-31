@@ -448,6 +448,21 @@ describe("the seeded teams", () => {
     expect(counts).toEqual([1, 2]); // never all three together
   });
 
+  it("have Jane and Sarah as captains, each on their own team", () => {
+    const gold = TEAMS.find((t) => t.id === "team-gold")!;
+    const aqua = TEAMS.find((t) => t.id === "team-aqua")!;
+    expect(gold.captainId).toBe("jane");
+    expect(aqua.captainId).toBe("sarah");
+    for (const t of TEAMS) {
+      expect(t.captainId).not.toBeNull();
+      // A captain must belong to the team they captain.
+      expect([...t.playerIds, ...t.nonScoringIds]).toContain(t.captainId!);
+      // Both captains are organisers, which is how they were chosen.
+      expect(PLAYERS.find((p) => p.id === t.captainId)!.organiser).toBe(true);
+    }
+    expect(new Set(TEAMS.map((t) => t.captainId)).size).toBe(TEAMS.length); // not the same person twice
+  });
+
   it("raise no balance warnings", () => {
     expect(validateTeams(TEAMS, COUPLES, LOCKED_GROUP_IDS)).toEqual([]);
   });

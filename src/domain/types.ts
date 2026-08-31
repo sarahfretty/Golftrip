@@ -61,6 +61,8 @@ export interface Team {
   name: string;
   /** Whose cards score for this team, assigned by the organisers. */
   playerIds: Id[];
+  /** The team's captain. Must be one of its own members. */
+  captainId: Id | null;
   /**
    * The rest of the team: everyone who belongs to it but whose card never counts —
    * a golfer who plays unscored, or an attendee who doesn't play at all. They appear
