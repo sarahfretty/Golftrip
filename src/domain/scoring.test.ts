@@ -15,7 +15,7 @@ import {
   validateHoles,
   validateTeams,
 } from "./scoring";
-import { COMPETITIONS, COUPLES, COURSES, EVENT, PLAYERS, PLAYING, ROUNDS, TEAMS, LOCKED_GROUP_IDS, defaultTeeGroups } from "../data/belek-cup-2026";
+import { COACH, coachVisible, COMPETITIONS, COUPLES, COURSES, EVENT, PLAYERS, PLAYING, ROUNDS, TEAMS, LOCKED_GROUP_IDS, defaultTeeGroups } from "../data/belek-cup-2026";
 import type { Course, Player, TeeSet } from "./types";
 
 function teeFor(course: Course, player: Player): TeeSet {
@@ -467,5 +467,31 @@ describe("every round counts", () => {
     const [row] = teamStandings([{ id: "t", playerIds: ["p1","p2","p3","p4","p5","p6"] }], totals, 3);
     expect(row.roundScores).toEqual([130, 25, 100]);
     expect(row.total).toBe(255); // all three, including the poor middle round
+  });
+});
+
+describe("the travel-day coach notice", () => {
+  it("shows in the run-up and the morning of travel day", () => {
+    expect(coachVisible(new Date("2026-08-31T09:00:00+01:00"))).toBe(true);
+    expect(coachVisible(new Date("2026-09-07T08:30:00+01:00"))).toBe(true); // before the first pick-up
+    expect(coachVisible(new Date("2026-09-07T09:59:00+01:00"))).toBe(true);
+  });
+
+  it("hides itself from 10am on travel day onwards", () => {
+    expect(coachVisible(new Date("2026-09-07T10:00:00+01:00"))).toBe(false);
+    expect(coachVisible(new Date("2026-09-07T13:00:00+01:00"))).toBe(false); // wheels up
+    expect(coachVisible(new Date("2026-09-10T09:00:00+03:00"))).toBe(false); // mid-trip
+  });
+
+  it("clears before the flight leaves and after the last pick-up", () => {
+    const hide = new Date(COACH.hideAfter).getTime();
+    expect(hide).toBeGreaterThan(new Date("2026-09-07T09:10:00+01:00").getTime());
+    expect(hide).toBeLessThan(new Date(`${EVENT.flights.out.date}T${EVENT.flights.out.depart}:00+01:00`).getTime());
+  });
+
+  it("lists the three pick-ups in order", () => {
+    expect(COACH.stops.map((s) => s.place)).toEqual([
+      "Wheatley Golf Club", "Sprotbrough, Ivanhoe", "Cadeby Village",
+    ]);
   });
 });

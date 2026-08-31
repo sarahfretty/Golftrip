@@ -1,5 +1,6 @@
 import { useNavigate } from "react-router-dom";
 import { useEvent } from "../store/store";
+import { COACH, coachVisible } from "../data/belek-cup-2026";
 import { Shield } from "../components/Shield";
 import { cardGross, formatGross } from "../domain/scoring";
 import { daysUntil, formatKicker } from "../lib/format";
@@ -101,6 +102,20 @@ function PreTrip({ days }: { days: number }) {
           <div className="phcp">{formatKicker(f.date)} · {f.depart}</div>
         </div>
       </div>
+
+      {coachVisible() && (
+        <>
+          <div className="sec"><div className="sec-label">The coach · travel day</div></div>
+          <div className="rows">
+            {COACH.stops.map((stop) => (
+              <div key={stop.place} className="row">
+                <div className="pname">{stop.place}</div>
+                <span className="stat-big" style={{ fontSize: 20 }}>{stop.time}</span>
+              </div>
+            ))}
+          </div>
+        </>
+      )}
 
       {me?.competing && (
         <>

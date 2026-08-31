@@ -167,6 +167,25 @@ export const ROUNDS: Round[] = [
   { id: "r3", number: 3, courseId: "montgomerie", date: "2026-09-12", teeWindow: "15:00–15:30", status: "upcoming", sealedUntilCeremony: true },
 ];
 
+// ── Temporary: travel-day coach ────────────────────────────────────────────
+// The coach pick-ups, shown on Home in the run-up to the trip. Deliberately
+// short-lived: it hides itself at 10:00 on travel day rather than needing
+// somebody to deploy a change from the airport. Safe to delete after the trip
+// along with the block in Home.tsx that renders it.
+export const COACH = {
+  hideAfter: "2026-09-07T10:00:00+01:00", // 10am UK time on travel day
+  stops: [
+    { time: "8.45", place: "Wheatley Golf Club" },
+    { time: "9.00", place: "Sprotbrough, Ivanhoe" },
+    { time: "9.10", place: "Cadeby Village" },
+  ],
+} as const;
+
+/** Whether the travel-day coach times should still be shown. */
+export function coachVisible(now: Date = new Date()): boolean {
+  return now.getTime() < new Date(COACH.hideAfter).getTime();
+}
+
 export const EVENT = {
   id: "belek-cup-2026",
   brand: "Golf Trips",
