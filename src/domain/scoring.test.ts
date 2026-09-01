@@ -1,6 +1,7 @@
 import { describe, it, expect } from "vitest";
 import {
   CARDS_PER_ROUND,
+  teamsSignature,
   playingHandicap,
   shotsOnHole,
   shotsMap,
@@ -556,5 +557,32 @@ describe("the shipped reveal", () => {
     expect(resolve(false, true)).toBe(true);
     expect(resolve(false, false)).toBe(false);
     expect(resolve(false, undefined)).toBe(false);
+  });
+});
+
+describe("stale saved teams", () => {
+  const gold = { id: "team-gold", captainId: "jane", playerIds: ["mark", "catherine"], nonScoringIds: ["graham"] };
+  const aqua = { id: "team-aqua", captainId: "sarah", playerIds: ["martin"], nonScoringIds: ["michelle"] };
+
+  it("changes when a player moves between teams", () => {
+    const before = teamsSignature([{ ...gold, playerIds: ["mark"] }, { ...aqua, playerIds: ["martin", "catherine"] }]);
+    const after = teamsSignature([gold, aqua]);
+    expect(before).not.toBe(after); // this is the Catherine move — a phone must notice
+  });
+
+  it("changes when a captain changes or a non-scorer moves", () => {
+    expect(teamsSignature([gold, aqua])).not.toBe(teamsSignature([{ ...gold, captainId: "mark" }, aqua]));
+    expect(teamsSignature([gold, aqua])).not.toBe(
+      teamsSignature([{ ...gold, nonScoringIds: [] }, { ...aqua, nonScoringIds: ["michelle", "graham"] }]),
+    );
+  });
+
+  it("is stable when nothing about the teams changed", () => {
+    expect(teamsSignature([gold, aqua])).toBe(teamsSignature([{ ...gold }, { ...aqua }]));
+  });
+
+  it("treats the real seeded teams as their own signature", () => {
+    expect(teamsSignature(TEAMS)).toBe(teamsSignature(TEAMS));
+    expect(teamsSignature(TEAMS)).toContain("catherine");
   });
 });

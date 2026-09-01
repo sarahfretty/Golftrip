@@ -249,6 +249,23 @@ export function teamStandings(
     .sort((a, b) => b.total - a.total);
 }
 
+/**
+ * A fingerprint of the seeded teams.
+ *
+ * Each device persists its own copy of the teams on first load, so a merge that let the
+ * saved copy win would pin whatever line-up was current the first time that phone opened
+ * the app — a later deploy moving someone between teams would never reach them. Storing
+ * this alongside the saved teams lets the app notice its copy is stale and take the seed.
+ * Derived from the content rather than a hand-bumped number, so it cannot be forgotten.
+ */
+export function teamsSignature(
+  teams: { id: string; captainId?: string | null; playerIds: string[]; nonScoringIds?: string[] }[],
+): string {
+  return teams
+    .map((t) => [t.id, t.captainId ?? "", t.playerIds.join(","), (t.nonScoringIds ?? []).join(",")].join(":"))
+    .join("|");
+}
+
 // ── Validation ─────────────────────────────────────────────────────────────
 // A single wrong stroke index makes the leaderboard quietly wrong all week, so
 // course data is validated before it is ever used.

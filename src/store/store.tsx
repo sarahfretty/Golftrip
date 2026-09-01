@@ -51,6 +51,7 @@ import {
   playingHandicap,
   shotsMap,
   teamStandings,
+  teamsSignature,
   teePar,
   type StandingRow,
   type TeamStandingRow,
@@ -58,9 +59,14 @@ import {
 
 const STORAGE_KEY = "golftrips:belek-cup-2026:v1";
 
+/** Fingerprint of the teams this build ships. A saved copy carrying any other value is stale. */
+const SEED_TEAMS_SIGNATURE = teamsSignature(TEAMS);
+
 interface EventState {
   rounds: Round[];
   teams: Team[];
+  /** The seed fingerprint the saved teams were written against. */
+  teamsSignature: string;
   /** Teams are picked privately and only appear on the Trip tab once the organiser reveals them. */
   teamsRevealed: boolean;
   teeGroups: TeeGroup[];
@@ -88,6 +94,7 @@ function initialState(): EventState {
     rounds: ROUNDS.map((r) => ({ ...r })),
     teams: TEAMS.map((t) => ({ ...t, playerIds: [...t.playerIds], nonScoringIds: [...t.nonScoringIds] })),
     teamsRevealed: TEAMS_REVEALED,
+    teamsSignature: SEED_TEAMS_SIGNATURE,
     teeGroups: defaultTeeGroups(),
     scorecards: {},
     sidePrizes: [],
@@ -113,9 +120,12 @@ function loadState(): EventState {
       const scorerId = saved && g.playerIds.includes(saved.scorerId) ? saved.scorerId : g.scorerId;
       return { ...g, scorerId };
     });
+    // A deploy that changes the teams beats every device's saved copy. Without this, a phone
+    // that opened the app before the change keeps the old line-up for good.
+    const teamsAreStale = parsed.teamsSignature !== SEED_TEAMS_SIGNATURE;
     // Drop any saved id that is no longer a player — someone can withdraw from the trip.
     const known = new Set(PLAYERS.map((p) => p.id));
-    const teams = base.teams.map((t) => {
+    const teams = teamsAreStale ? base.teams : base.teams.map((t) => {
       const saved = parsed.teams?.find((x) => x.id === t.id);
       if (!saved) return t;
       const playerIds = saved.playerIds.filter((id) => known.has(id));
@@ -129,6 +139,7 @@ function loadState(): EventState {
     return {
       rounds,
       teams,
+      teamsSignature: SEED_TEAMS_SIGNATURE,
       // The seed wins once a reveal has shipped: every device already persisted
       // teamsRevealed:false on its first visit, so a saved false must not override it.
       teamsRevealed: TEAMS_REVEALED || (parsed.teamsRevealed ?? false),
