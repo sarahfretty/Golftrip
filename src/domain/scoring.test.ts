@@ -191,11 +191,12 @@ describe("tee draw rotates without repeating partners", () => {
     }
   });
 
-  it("keeps the ladies' threeball together every round", () => {
+  it("keeps the locked ladies together every round", () => {
     for (const r of compRounds) {
       const locked = groupsByRound(r.id).find((g) => LOCKED_GROUP_IDS.every((id: string) => g.playerIds.includes(id)));
       expect(locked).toBeTruthy();
-      expect(locked!.playerIds.length).toBe(LOCKED_GROUP_IDS.length);
+      // Three locked plus the rotating fourth, so the last tee time is a fourball.
+      expect(locked!.playerIds.length).toBe(LOCKED_GROUP_IDS.length + 1);
     }
   });
 
@@ -590,12 +591,24 @@ describe("stale saved teams", () => {
 describe("the tee draw order and scorers", () => {
   const groupsOf = (rid: string) => defaultTeeGroups().filter((g) => g.roundId === rid);
 
-  it("sends the locked threeball out last, every round", () => {
+  it("sends a fourball out last, every round, built round the locked group", () => {
+    const extras: string[] = [];
     for (const r of ROUNDS) {
       const gs = groupsOf(r.id);
       const last = gs[gs.length - 1];
       expect(last.name).toBe(`Group ${gs.length}`); // last tee time, named by position
-      expect([...last.playerIds].sort()).toEqual([...LOCKED_GROUP_IDS].sort());
+      expect(last.playerIds.length).toBe(4);
+      for (const id of LOCKED_GROUP_IDS as readonly string[]) expect(last.playerIds).toContain(id);
+      extras.push(last.playerIds.find((id) => !LOCKED_GROUP_IDS.includes(id))!);
+    }
+    // Nobody is out last every day.
+    expect(new Set(extras).size).toBe(ROUNDS.length);
+  });
+
+  it("puts the other groups out in threes", () => {
+    for (const r of ROUNDS) {
+      const gs = groupsOf(r.id);
+      for (const g of gs.slice(0, -1)) expect(g.playerIds.length).toBe(3);
     }
   });
 

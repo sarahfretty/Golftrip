@@ -220,21 +220,27 @@ const LOCKED_GROUP_PLAYERS = ["kathy", "debs", "catherine"];
 
 /** Its scorer rotates too — the same person shouldn't mark every day. */
 const LOCKED_GROUP_SCORER: Record<string, string> = { r1: "debs", r2: "kathy", r3: "catherine" };
+
+/**
+ * A fourth golfer joins the locked group each round, so the last tee time is a fourball
+ * rather than a three. Rotates, so nobody is out last every day.
+ */
+const LOCKED_GROUP_EXTRA: Record<string, string> = { r1: "jo-campbell", r2: "jo-irving", r3: "nicky" };
 const DRAWS: Record<string, DrawGroup[]> = {
   r1: [
-    { name: "Group 1", playerIds: ["jim", "sarah", "chris", "jo-campbell"], scorerId: "jo-campbell" },
-    { name: "Group 2", playerIds: ["martin", "nicky", "paul"], scorerId: "martin" },
-    { name: "Group 3", playerIds: ["mark", "jo-irving", "jane"], scorerId: "mark" },
+    { name: "Group 1", playerIds: ["martin", "sarah", "chris"], scorerId: "sarah" },
+    { name: "Group 2", playerIds: ["mark", "jane", "jim"], scorerId: "mark" },
+    { name: "Group 3", playerIds: ["paul", "nicky", "jo-irving"], scorerId: "nicky" },
   ],
   r2: [
-    { name: "Group 1", playerIds: ["jim", "jane", "martin", "jo-campbell"], scorerId: "jim" },
-    { name: "Group 2", playerIds: ["paul", "sarah", "mark"], scorerId: "sarah" },
-    { name: "Group 3", playerIds: ["chris", "jo-irving", "nicky"], scorerId: "chris" },
+    { name: "Group 1", playerIds: ["jim", "sarah", "paul"], scorerId: "paul" },
+    { name: "Group 2", playerIds: ["martin", "jane", "nicky"], scorerId: "martin" },
+    { name: "Group 3", playerIds: ["mark", "chris", "jo-campbell"], scorerId: "jo-campbell" },
   ],
   r3: [
-    { name: "Group 1", playerIds: ["martin", "sarah", "chris", "jane"], scorerId: "jane" },
-    { name: "Group 2", playerIds: ["mark", "nicky", "jim"], scorerId: "nicky" },
-    { name: "Group 3", playerIds: ["paul", "jo-irving", "jo-campbell"], scorerId: "paul" },
+    { name: "Group 1", playerIds: ["martin", "jim", "jo-campbell"], scorerId: "jim" },
+    { name: "Group 2", playerIds: ["mark", "sarah", "jo-irving"], scorerId: "jo-irving" },
+    { name: "Group 3", playerIds: ["paul", "chris", "jane"], scorerId: "jane" },
   ],
 };
 
@@ -248,7 +254,7 @@ export function defaultTeeGroups(): import("../domain/types").TeeGroup[] {
         // Named by its position like every other group, so it reads as the last tee time
         // rather than as something separate.
         name: `Group ${(DRAWS[round.id]?.length ?? 0) + 1}`,
-        playerIds: LOCKED_GROUP_PLAYERS,
+        playerIds: [...LOCKED_GROUP_PLAYERS, LOCKED_GROUP_EXTRA[round.id]].filter(Boolean),
         scorerId: LOCKED_GROUP_SCORER[round.id] ?? LOCKED_GROUP_PLAYERS[0],
       },
     ];
