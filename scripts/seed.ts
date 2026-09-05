@@ -27,6 +27,23 @@ if (!url || !key) {
 }
 const db = createClient(url, key, { auth: { persistSession: false } });
 
+/**
+ * Membership tables are a full replacement, not an upsert.
+ *
+ * Upserting only ever adds: when the draw changes, the rows for the old draw stay behind and
+ * groups quietly accumulate players. Re-seeding after three draw changes left groups holding
+ * seven and eight golfers. These tables describe the current draw, so the current draw is
+ * exactly what they should contain.
+ */
+async function replaceAll(table: string, keyColumn: string, rows: object[]) {
+  const { error: delError } = await db.from(table).delete().not(keyColumn, "is", null);
+  if (delError) throw new Error(`${table} clear: ${delError.message}`);
+  if (rows.length === 0) return;
+  const { error } = await db.from(table).insert(rows);
+  if (error) throw new Error(`${table}: ${error.message}`);
+  console.log(`  ✓ ${table} (${rows.length}, replaced)`);
+}
+
 async function upsert(table: string, rows: object[], onConflict?: string) {
   if (rows.length === 0) return;
   const { error } = await db.from(table).upsert(rows, onConflict ? { onConflict } : undefined);
@@ -66,7 +83,7 @@ async function main() {
     id: t.id, event_id: EVENT.id, name: t.name, captain_id: t.captainId ?? null,
   })));
   // Both rosters go in: scoring members and the ones on the team whose card never counts.
-  await upsert("team_members", TEAMS.flatMap((t) => [
+  await replaceAll("team_members", "team_id", TEAMS.flatMap((t) => [
     ...t.playerIds.map((pid) => ({ team_id: t.id, player_id: pid, scoring: true })),
     ...t.nonScoringIds.map((pid) => ({ team_id: t.id, player_id: pid, scoring: false })),
   ]));
@@ -84,7 +101,31 @@ async function main() {
 
   const groups = defaultTeeGroups();
   await upsert("tee_groups", groups.map((g) => ({ id: g.id, round_id: g.roundId, name: g.name, scorer_id: g.scorerId })));
-  await upsert("tee_group_members", groups.flatMap((g) => g.playerIds.map((pid) => ({ group_id: g.id, player_id: pid }))));
+  await replaceAll("tee_group_members", "group_id",
+    groups.flatMap((g) => g.playerIds.map((pid) => ({ group_id: g.id, player_id: pid }))));
+
+  // Read back what actually landed. An upsert that should have been a replacement left
+  // groups holding seven and eight golfers once already; counting is cheap insurance.
+  const expected: Record<string, number> = {
+    players: PLAYERS.length,
+    teams: TEAMS.length,
+    team_members: TEAMS.reduce((n, t) => n + t.playerIds.length + t.nonScoringIds.length, 0),
+    rounds: ROUNDS.length,
+    tee_groups: groups.length,
+    tee_group_members: groups.reduce((n, g) => n + g.playerIds.length, 0),
+  };
+  const wrong: string[] = [];
+  for (const [table, want] of Object.entries(expected)) {
+    const { count, error } = await db.from(table).select("*", { count: "exact", head: true });
+    if (error) throw new Error(`${table} verify: ${error.message}`);
+    if (count !== want) wrong.push(`${table}: found ${count}, expected ${want}`);
+  }
+  if (wrong.length) {
+    console.error("\nSeed finished but the database does not match the source data:");
+    for (const w of wrong) console.error("  ✗ " + w);
+    process.exit(1);
+  }
+  console.log("Verified: every table matches src/data/belek-cup-2026.ts");
 
   console.log("Done.");
 }
