@@ -586,3 +586,32 @@ describe("stale saved teams", () => {
     expect(teamsSignature(TEAMS)).toContain("catherine");
   });
 });
+
+describe("the tee draw order and scorers", () => {
+  const groupsOf = (rid: string) => defaultTeeGroups().filter((g) => g.roundId === rid);
+
+  it("sends the locked threeball out last, every round", () => {
+    for (const r of ROUNDS) {
+      const gs = groupsOf(r.id);
+      const last = gs[gs.length - 1];
+      expect(last.name).toBe(`Group ${gs.length}`); // last tee time, named by position
+      expect([...last.playerIds].sort()).toEqual([...LOCKED_GROUP_IDS].sort());
+    }
+  });
+
+  it("gives every group a different scorer each round — nobody marks twice", () => {
+    const scorers = ROUNDS.flatMap((r) => groupsOf(r.id).map((g) => g.scorerId));
+    expect(scorers.length).toBe(12); // four groups, three rounds
+    expect(new Set(scorers).size).toBe(scorers.length);
+  });
+
+  it("rotates the threeball's own scorer too", () => {
+    const theirs = ROUNDS.map((r) => groupsOf(r.id).at(-1)!.scorerId);
+    expect(new Set(theirs).size).toBe(ROUNDS.length);
+    for (const id of theirs) expect(LOCKED_GROUP_IDS).toContain(id);
+  });
+
+  it("only ever nominates someone playing in that group", () => {
+    for (const g of defaultTeeGroups()) expect(g.playerIds).toContain(g.scorerId);
+  });
+});

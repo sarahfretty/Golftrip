@@ -215,35 +215,43 @@ export const EVENT = {
 // round — the one deliberate exception. Computed to minimise repeat pairings across
 // the three rounds; organiser-editable in the app.
 type DrawGroup = { name: string; playerIds: string[]; scorerId: string };
-const LOCKED_GROUP: DrawGroup = {
-  name: "The Threeball",
-  playerIds: ["kathy", "debs", "catherine"],
-  scorerId: "debs",
-};
+/** The locked ladies' group. Always the last group out, every round. */
+const LOCKED_GROUP_PLAYERS = ["kathy", "debs", "catherine"];
+
+/** Its scorer rotates too — the same person shouldn't mark every day. */
+const LOCKED_GROUP_SCORER: Record<string, string> = { r1: "debs", r2: "kathy", r3: "catherine" };
 const DRAWS: Record<string, DrawGroup[]> = {
   r1: [
-    { name: "Group 1", playerIds: ["jim", "sarah", "chris", "jo-campbell"], scorerId: "sarah" },
+    { name: "Group 1", playerIds: ["jim", "sarah", "chris", "jo-campbell"], scorerId: "jo-campbell" },
     { name: "Group 2", playerIds: ["martin", "nicky", "paul"], scorerId: "martin" },
-    { name: "Group 3", playerIds: ["mark", "jo-irving", "jane"], scorerId: "jane" },
-    LOCKED_GROUP,
+    { name: "Group 3", playerIds: ["mark", "jo-irving", "jane"], scorerId: "mark" },
   ],
   r2: [
-    { name: "Group 1", playerIds: ["jim", "jane", "martin", "jo-campbell"], scorerId: "jane" },
+    { name: "Group 1", playerIds: ["jim", "jane", "martin", "jo-campbell"], scorerId: "jim" },
     { name: "Group 2", playerIds: ["paul", "sarah", "mark"], scorerId: "sarah" },
     { name: "Group 3", playerIds: ["chris", "jo-irving", "nicky"], scorerId: "chris" },
-    LOCKED_GROUP,
   ],
   r3: [
-    { name: "Group 1", playerIds: ["martin", "sarah", "chris", "jane"], scorerId: "sarah" },
-    { name: "Group 2", playerIds: ["mark", "nicky", "jim"], scorerId: "jim" },
+    { name: "Group 1", playerIds: ["martin", "sarah", "chris", "jane"], scorerId: "jane" },
+    { name: "Group 2", playerIds: ["mark", "nicky", "jim"], scorerId: "nicky" },
     { name: "Group 3", playerIds: ["paul", "jo-irving", "jo-campbell"], scorerId: "paul" },
-    LOCKED_GROUP,
   ],
 };
 
 export function defaultTeeGroups(): import("../domain/types").TeeGroup[] {
   return ROUNDS.flatMap((round) => {
-    const draw = DRAWS[round.id] ?? [];
+    // The locked group is appended here rather than written into each round's draw, so it
+    // is last out every round by construction and cannot be reordered by accident.
+    const draw: DrawGroup[] = [
+      ...(DRAWS[round.id] ?? []),
+      {
+        // Named by its position like every other group, so it reads as the last tee time
+        // rather than as something separate.
+        name: `Group ${(DRAWS[round.id]?.length ?? 0) + 1}`,
+        playerIds: LOCKED_GROUP_PLAYERS,
+        scorerId: LOCKED_GROUP_SCORER[round.id] ?? LOCKED_GROUP_PLAYERS[0],
+      },
+    ];
     return draw.map((g, i) => ({
       id: `${round.id}-g${i + 1}`,
       roundId: round.id,

@@ -17,6 +17,7 @@ import {
   useContext,
   useEffect,
   useMemo,
+  useRef,
   useState,
   type ReactNode,
 } from "react";
@@ -56,13 +57,15 @@ import {
   type StandingRow,
   type TeamStandingRow,
 } from "../domain/scoring";
+import { isSupabaseConfigured } from "../lib/supabase";
+import * as remote from "./remote";
 
 const STORAGE_KEY = "golftrips:belek-cup-2026:v1";
 
 /** Fingerprint of the teams this build ships. A saved copy carrying any other value is stale. */
 const SEED_TEAMS_SIGNATURE = teamsSignature(TEAMS);
 
-interface EventState {
+export interface EventState {
   rounds: Round[];
   teams: Team[];
   /** The seed fingerprint the saved teams were written against. */
@@ -211,7 +214,39 @@ export interface EventContextValue {
 const EventContext = createContext<EventContextValue | null>(null);
 
 export function EventProvider({ children }: { children: ReactNode }) {
-  const [state, setState] = useState<EventState>(loadState);
+  // With Supabase configured there is one shared copy of the event, so the per-device
+  // localStorage copy is not read at all — it is the thing that kept going stale.
+  const [state, setState] = useState<EventState>(() => (isSupabaseConfigured ? initialState() : loadState()));
+  const stateRef = useRef(state);
+  stateRef.current = state;
+
+  // Load the shared state, then follow it live.
+  useEffect(() => {
+    if (!isSupabaseConfigured) return;
+    let alive = true;
+    const pull = () => {
+      remote
+        .fetchState()
+        .then((next) => { if (alive) setState(next); })
+        .catch((e) => console.error("[golftrips] load failed", e));
+    };
+    pull();
+    const unsubscribe = remote.subscribe(pull);
+    return () => { alive = false; unsubscribe(); };
+  }, []);
+
+  /**
+   * Send a write to Supabase behind an optimistic local update. On failure the state is
+   * pulled back from the database, so a rejected write shows up as the change reverting
+   * rather than as a phone quietly disagreeing with everyone else.
+   */
+  const push = useCallback((run: () => Promise<unknown>) => {
+    if (!isSupabaseConfigured) return;
+    void run().catch((e) => {
+      console.error("[golftrips] write failed, resyncing", e);
+      remote.fetchState().then(setState).catch(() => {});
+    });
+  }, []);
   const [currentPlayerId, setCurrentPlayerId] = useState<string | null>(
     () => localStorage.getItem(STORAGE_KEY + ":me"),
   );
@@ -220,6 +255,7 @@ export function EventProvider({ children }: { children: ReactNode }) {
   );
 
   useEffect(() => {
+    if (isSupabaseConfigured) return; // the database is the record; don't keep a rival copy
     localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
   }, [state]);
 
@@ -355,8 +391,9 @@ export function EventProvider({ children }: { children: ReactNode }) {
         card.strokes[hole - 1] = value;
         return card;
       });
+      push(() => remote.setStroke(roundId, playerId, hole, value));
     },
-    [mutateCard],
+    [mutateCard, push],
   );
 
   const signCard = useCallback(
@@ -366,8 +403,9 @@ export function EventProvider({ children }: { children: ReactNode }) {
         signedBy: by,
         signedAt: new Date().toISOString(),
       }));
+      push(() => remote.signCard(roundId, playerId, by));
     },
-    [mutateCard],
+    [mutateCard, push],
   );
 
   const correctStroke = useCallback(
@@ -381,8 +419,10 @@ export function EventProvider({ children }: { children: ReactNode }) {
         ];
         return card;
       });
+      const before = stateRef.current.scorecards[cardKey(roundId, playerId)]?.strokes[hole - 1] ?? null;
+      push(() => remote.correctStroke(roundId, playerId, hole, value, by, before));
     },
-    [mutateCard],
+    [mutateCard, push],
   );
 
   const setRoundStatus = useCallback((roundId: string, status: RoundStatus) => {
@@ -390,7 +430,8 @@ export function EventProvider({ children }: { children: ReactNode }) {
       ...s,
       rounds: s.rounds.map((r) => (r.id === roundId ? { ...r, status } : r)),
     }));
-  }, []);
+    push(() => remote.setRoundStatus(roundId, status));
+  }, [push]);
 
   const setSidePrize = useCallback(
     (roundId: string, competitionId: string, hole: number, winnerId: string | null) => {
@@ -400,8 +441,9 @@ export function EventProvider({ children }: { children: ReactNode }) {
         );
         return { ...s, sidePrizes: [...rest, { roundId, competitionId, hole, winnerId }] };
       });
+      push(() => remote.setSidePrize(roundId, competitionId, hole, winnerId));
     },
-    [],
+    [push],
   );
 
   const setGroupScorer = useCallback((groupId: string, playerId: string) => {
@@ -409,15 +451,18 @@ export function EventProvider({ children }: { children: ReactNode }) {
       ...s,
       teeGroups: s.teeGroups.map((g) => (g.id === groupId ? { ...g, scorerId: playerId } : g)),
     }));
-  }, []);
+    push(() => remote.setGroupScorer(groupId, playerId));
+  }, [push]);
 
   const setTeams = useCallback((teams: Team[]) => {
     setState((s) => ({ ...s, teams }));
-  }, []);
+    push(() => remote.setTeams(teams));
+  }, [push]);
 
   const setTeamsRevealed = useCallback((revealed: boolean) => {
     setState((s) => ({ ...s, teamsRevealed: revealed }));
-  }, []);
+    push(() => remote.setTeamsRevealed(revealed));
+  }, [push]);
 
   const addAnnouncement = useCallback((title: string, body: string, by: string) => {
     setState((s) => ({
@@ -427,9 +472,17 @@ export function EventProvider({ children }: { children: ReactNode }) {
         ...s.announcements,
       ],
     }));
-  }, []);
+    push(() => remote.addAnnouncement(title, body, by));
+  }, [push]);
 
-  const resetAll = useCallback(() => setState(initialState()), []);
+  const resetAll = useCallback(() => {
+    if (isSupabaseConfigured) {
+      // Shared data: resync from the database rather than blowing it away from one phone.
+      remote.fetchState().then(setState).catch((e) => console.error("[golftrips] resync failed", e));
+      return;
+    }
+    setState(initialState());
+  }, []);
 
   const value = useMemo<EventContextValue>(
     () => ({
