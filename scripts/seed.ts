@@ -9,10 +9,14 @@
  * Uses the service-role key (server-side only) so it can write past RLS. Idempotent: it
  * upserts, so re-running is safe. It does NOT touch scores, corrections or announcements.
  */
-import "dotenv/config";
+import dotenv from "dotenv";
+// The documented home for these values is .env.local (gitignored); fall back to .env.
+// dotenv does not overwrite what is already set, so .env.local wins.
+dotenv.config({ path: ".env.local" });
+dotenv.config();
 import { createClient } from "@supabase/supabase-js";
 import {
-  EVENT, COURSES, PLAYERS, TEAMS, COUPLES, COMPETITIONS, ROUNDS, defaultTeeGroups,
+  EVENT, COURSES, PLAYERS, TEAMS, TEAMS_REVEALED, COUPLES, COMPETITIONS, ROUNDS, defaultTeeGroups,
 } from "../src/data/belek-cup-2026";
 
 const url = process.env.SUPABASE_URL;
@@ -37,6 +41,7 @@ async function main() {
     id: EVENT.id, brand: EVENT.brand, name: EVENT.name, location: EVENT.location,
     start_date: EVENT.startDate, end_date: EVENT.endDate, ceremony_date: EVENT.ceremonyDate,
     allowance: EVENT.allowance, counting_rounds: EVENT.countingRounds,
+    teams_revealed: TEAMS_REVEALED,
   }]);
 
   await upsert("courses", COURSES.map((c) => ({
@@ -57,8 +62,14 @@ async function main() {
     organiser: p.organiser ?? false, locked_group: p.lockedGroup ?? null,
   })));
 
-  await upsert("teams", TEAMS.map((t) => ({ id: t.id, event_id: EVENT.id, name: t.name })));
-  await upsert("team_members", TEAMS.flatMap((t) => t.playerIds.map((pid) => ({ team_id: t.id, player_id: pid }))));
+  await upsert("teams", TEAMS.map((t) => ({
+    id: t.id, event_id: EVENT.id, name: t.name, captain_id: t.captainId ?? null,
+  })));
+  // Both rosters go in: scoring members and the ones on the team whose card never counts.
+  await upsert("team_members", TEAMS.flatMap((t) => [
+    ...t.playerIds.map((pid) => ({ team_id: t.id, player_id: pid, scoring: true })),
+    ...t.nonScoringIds.map((pid) => ({ team_id: t.id, player_id: pid, scoring: false })),
+  ]));
 
   await upsert("couples", COUPLES.map((c) => ({ event_id: EVENT.id, player_a: c.playerIds[0], player_b: c.playerIds[1] })));
 

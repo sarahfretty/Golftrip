@@ -35,7 +35,10 @@ create table if not exists events (
   end_date date not null,
   ceremony_date date,
   allowance numeric not null default 0.95,
-  counting_rounds int not null default 2
+  counting_rounds int not null default 2,
+  -- Whether the teams are public yet. Shared here so a reveal reaches every phone at once,
+  -- rather than living in each device's own storage as it does on the local adapter.
+  teams_revealed boolean not null default false
 );
 
 create table if not exists courses (
@@ -84,14 +87,23 @@ create table if not exists players (
 create table if not exists teams (
   id text primary key,
   event_id text not null references events (id) on delete cascade,
-  name text not null
+  name text not null,
+  captain_id text references players (id) on delete set null
 );
 
 create table if not exists team_members (
   team_id text not null references teams (id) on delete cascade,
   player_id text not null references players (id) on delete cascade,
+  -- False for members whose card never counts: someone playing unscored, or not playing at
+  -- all. They belong to the team and show on the Trip tab, but no standing sees them.
+  scoring boolean not null default true,
   primary key (team_id, player_id)
 );
+
+-- Idempotent top-ups, so re-running this file against an existing database is safe.
+alter table events add column if not exists teams_revealed boolean not null default false;
+alter table teams add column if not exists captain_id text references players (id) on delete set null;
+alter table team_members add column if not exists scoring boolean not null default true;
 
 create table if not exists couples (
   event_id text not null references events (id) on delete cascade,
@@ -196,8 +208,10 @@ begin
   ] loop
     execute format('alter table %I enable row level security;', t);
     -- Public read on everything.
+    execute format($p$drop policy if exists %I on %I;$p$, t||'_read', t);
     execute format($p$create policy %I on %I for select using (true);$p$, t||'_read', t);
     -- Organiser can do anything.
+    execute format($p$drop policy if exists %I on %I;$p$, t||'_org', t);
     execute format($p$create policy %I on %I for all using (is_organiser()) with check (is_organiser());$p$, t||'_org', t);
   end loop;
 end $$;
@@ -209,6 +223,10 @@ language sql stable as $$
 $$;
 
 -- Anyone (the nominated scorer, unauthenticated) may create/upsert scores while the round is open.
+drop policy if exists scorecards_public_write on scorecards;
+drop policy if exists hole_scores_public_insert on hole_scores;
+drop policy if exists hole_scores_public_update on hole_scores;
+drop policy if exists scorecards_public_sign on scorecards;
 create policy scorecards_public_write on scorecards
   for insert with check (round_open(round_id));
 create policy hole_scores_public_insert on hole_scores
@@ -219,4 +237,22 @@ create policy scorecards_public_sign on scorecards
   for update using (round_open(round_id)) with check (round_open(round_id));
 
 -- Realtime: publish the tables the app subscribes to (submission board, standings, ceremony).
-alter publication supabase_realtime add table hole_scores, scorecards, rounds, side_prizes, announcements;
+-- Added one at a time, skipping any already published, so this file can be re-run.
+do $$
+declare t text;
+begin
+  foreach t in array array[
+    'hole_scores','scorecards','rounds','side_prizes','announcements','events','teams','team_members'
+  ] loop
+    if not exists (
+      select 1 from pg_publication_tables
+      where pubname = 'supabase_realtime' and schemaname = 'public' and tablename = t
+    ) then
+      execute format('alter publication supabase_realtime add table %I;', t);
+    end if;
+  end loop;
+end $$;
+
+-- Tell PostgREST to pick up the new tables immediately, rather than waiting for its cache
+-- to expire — that stale cache is what makes a fresh seed fail with "table not found".
+notify pgrst, 'reload schema';
