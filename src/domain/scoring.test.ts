@@ -195,8 +195,7 @@ describe("tee draw rotates without repeating partners", () => {
     for (const r of compRounds) {
       const locked = groupsByRound(r.id).find((g) => LOCKED_GROUP_IDS.every((id: string) => g.playerIds.includes(id)));
       expect(locked).toBeTruthy();
-      // Three locked plus the rotating fourth, so the last tee time is a fourball.
-      expect(locked!.playerIds.length).toBe(LOCKED_GROUP_IDS.length + 1);
+      expect(locked!.playerIds.length).toBe(LOCKED_GROUP_IDS.length); // a threeball, always
     }
   });
 
@@ -591,24 +590,29 @@ describe("stale saved teams", () => {
 describe("the tee draw order and scorers", () => {
   const groupsOf = (rid: string) => defaultTeeGroups().filter((g) => g.roundId === rid);
 
-  it("sends a fourball out last, every round, built round the locked group", () => {
-    const extras: string[] = [];
+  it("sends the fourball out last, every round", () => {
     for (const r of ROUNDS) {
       const gs = groupsOf(r.id);
       const last = gs[gs.length - 1];
-      expect(last.name).toBe(`Group ${gs.length}`); // last tee time, named by position
+      expect(last.name).toBe(`Group ${gs.length}`); // named by the position it tees off in
       expect(last.playerIds.length).toBe(4);
-      for (const id of LOCKED_GROUP_IDS as readonly string[]) expect(last.playerIds).toContain(id);
-      extras.push(last.playerIds.find((id) => !LOCKED_GROUP_IDS.includes(id))!);
+      // Thirteen golfers is 3 + 3 + 3 + 4, so the four is the only group of its size.
+      expect(gs.filter((g) => g.playerIds.length === 4).length).toBe(1);
     }
-    // Nobody is out last every day.
-    expect(new Set(extras).size).toBe(ROUNDS.length);
   });
 
-  it("puts the other groups out in threes", () => {
+  it("keeps the locked ladies as a threeball, not in the last group", () => {
     for (const r of ROUNDS) {
       const gs = groupsOf(r.id);
-      for (const g of gs.slice(0, -1)) expect(g.playerIds.length).toBe(3);
+      const locked = gs.find((g) => LOCKED_GROUP_IDS.every((id: string) => g.playerIds.includes(id)))!;
+      expect(locked.playerIds.length).toBe(3);
+      expect(locked.id).not.toBe(gs[gs.length - 1].id);
+    }
+  });
+
+  it("puts every other group out in threes", () => {
+    for (const r of ROUNDS) {
+      for (const g of groupsOf(r.id).slice(0, -1)) expect(g.playerIds.length).toBe(3);
     }
   });
 
@@ -619,7 +623,11 @@ describe("the tee draw order and scorers", () => {
   });
 
   it("rotates the threeball's own scorer too", () => {
-    const theirs = ROUNDS.map((r) => groupsOf(r.id).at(-1)!.scorerId);
+    // The locked group is no longer last, so find it by membership.
+    const theirs = ROUNDS.map((r) => {
+      const g = groupsOf(r.id).find((x) => LOCKED_GROUP_IDS.every((id: string) => x.playerIds.includes(id)))!;
+      return g.scorerId;
+    });
     expect(new Set(theirs).size).toBe(ROUNDS.length);
     for (const id of theirs) expect(LOCKED_GROUP_IDS).toContain(id);
   });

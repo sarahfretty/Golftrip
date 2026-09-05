@@ -215,53 +215,65 @@ export const EVENT = {
 // round — the one deliberate exception. Computed to minimise repeat pairings across
 // the three rounds; organiser-editable in the app.
 type DrawGroup = { name: string; playerIds: string[]; scorerId: string };
+
+/**
+ * Each round: two threes, then the locked ladies' threeball, then the fourball — which
+ * always goes out last. Thirteen golfers is 3 + 3 + 3 + 4, so exactly one group is a four
+ * and that is the one holding the last tee time.
+ */
+type RoundDraw = { threes: [DrawGroup, DrawGroup]; four: DrawGroup };
 /** The locked ladies' group. Always the last group out, every round. */
 const LOCKED_GROUP_PLAYERS = ["kathy", "debs", "catherine"];
 
 /** Its scorer rotates too — the same person shouldn't mark every day. */
 const LOCKED_GROUP_SCORER: Record<string, string> = { r1: "debs", r2: "kathy", r3: "catherine" };
 
-/**
- * A fourth golfer joins the locked group each round, so the last tee time is a fourball
- * rather than a three. Rotates, so nobody is out last every day.
- */
-const LOCKED_GROUP_EXTRA: Record<string, string> = { r1: "jo-campbell", r2: "jo-irving", r3: "nicky" };
-const DRAWS: Record<string, DrawGroup[]> = {
-  r1: [
-    { name: "Group 1", playerIds: ["martin", "sarah", "chris"], scorerId: "sarah" },
-    { name: "Group 2", playerIds: ["mark", "jane", "jim"], scorerId: "mark" },
-    { name: "Group 3", playerIds: ["paul", "nicky", "jo-irving"], scorerId: "nicky" },
-  ],
-  r2: [
-    { name: "Group 1", playerIds: ["jim", "sarah", "paul"], scorerId: "paul" },
-    { name: "Group 2", playerIds: ["martin", "jane", "nicky"], scorerId: "martin" },
-    { name: "Group 3", playerIds: ["mark", "chris", "jo-campbell"], scorerId: "jo-campbell" },
-  ],
-  r3: [
-    { name: "Group 1", playerIds: ["martin", "jim", "jo-campbell"], scorerId: "jim" },
-    { name: "Group 2", playerIds: ["mark", "sarah", "jo-irving"], scorerId: "jo-irving" },
-    { name: "Group 3", playerIds: ["paul", "chris", "jane"], scorerId: "jane" },
-  ],
+
+const DRAWS: Record<string, RoundDraw> = {
+  r1: {
+    threes: [
+      { name: "", playerIds: ["martin", "nicky", "paul"], scorerId: "martin" },
+      { name: "", playerIds: ["mark", "jo-irving", "jane"], scorerId: "jane" },
+    ],
+    four: { name: "", playerIds: ["jim", "sarah", "chris", "jo-campbell"], scorerId: "jim" },
+  },
+  r2: {
+    threes: [
+      { name: "", playerIds: ["paul", "sarah", "mark"], scorerId: "paul" },
+      { name: "", playerIds: ["chris", "jo-irving", "nicky"], scorerId: "chris" },
+    ],
+    four: { name: "", playerIds: ["jim", "jane", "martin", "jo-campbell"], scorerId: "jo-campbell" },
+  },
+  r3: {
+    threes: [
+      { name: "", playerIds: ["mark", "nicky", "jim"], scorerId: "nicky" },
+      { name: "", playerIds: ["paul", "jo-irving", "jo-campbell"], scorerId: "jo-irving" },
+    ],
+    four: { name: "", playerIds: ["martin", "sarah", "chris", "jane"], scorerId: "sarah" },
+  },
 };
 
 export function defaultTeeGroups(): import("../domain/types").TeeGroup[] {
   return ROUNDS.flatMap((round) => {
-    // The locked group is appended here rather than written into each round's draw, so it
-    // is last out every round by construction and cannot be reordered by accident.
-    const draw: DrawGroup[] = [
-      ...(DRAWS[round.id] ?? []),
-      {
-        // Named by its position like every other group, so it reads as the last tee time
-        // rather than as something separate.
-        name: `Group ${(DRAWS[round.id]?.length ?? 0) + 1}`,
-        playerIds: [...LOCKED_GROUP_PLAYERS, LOCKED_GROUP_EXTRA[round.id]].filter(Boolean),
-        scorerId: LOCKED_GROUP_SCORER[round.id] ?? LOCKED_GROUP_PLAYERS[0],
-      },
-    ];
+    // Order is built here, not left to how the draw happens to be written: the two threes,
+    // then the locked ladies' threeball, then the fourball last. Groups are named by the
+    // position they tee off in.
+    const rd = DRAWS[round.id];
+    const draw: DrawGroup[] = rd
+      ? [
+          ...rd.threes,
+          {
+            name: "",
+            playerIds: LOCKED_GROUP_PLAYERS,
+            scorerId: LOCKED_GROUP_SCORER[round.id] ?? LOCKED_GROUP_PLAYERS[0],
+          },
+          rd.four,
+        ]
+      : [];
     return draw.map((g, i) => ({
       id: `${round.id}-g${i + 1}`,
       roundId: round.id,
-      name: g.name,
+      name: `Group ${i + 1}`,
       playerIds: g.playerIds,
       scorerId: g.scorerId,
     }));
