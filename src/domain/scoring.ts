@@ -266,6 +266,32 @@ export function teamsSignature(
     .join("|");
 }
 
+/** How long an announcement stays on Home before it becomes history on the Trip tab. */
+export const ANNOUNCEMENT_HOURS_ON_HOME = 72;
+
+/**
+ * The announcements worth putting in front of someone on Home.
+ *
+ * Home answers "what is happening now", so it carries only what is still current, newest
+ * first and capped. The Trip tab keeps the full record — nothing is ever deleted, it just
+ * stops shouting.
+ */
+export function currentAnnouncements<T extends { at: string }>(
+  all: T[],
+  now: Date = new Date(),
+  hours: number = ANNOUNCEMENT_HOURS_ON_HOME,
+  max = 2,
+): T[] {
+  const cutoff = now.getTime() - hours * 60 * 60 * 1000;
+  return [...all]
+    .filter((a) => {
+      const at = new Date(a.at).getTime();
+      return Number.isFinite(at) && at >= cutoff;
+    })
+    .sort((a, b) => new Date(b.at).getTime() - new Date(a.at).getTime())
+    .slice(0, max);
+}
+
 // ── Validation ─────────────────────────────────────────────────────────────
 // A single wrong stroke index makes the leaderboard quietly wrong all week, so
 // course data is validated before it is ever used.

@@ -1,6 +1,8 @@
 import { describe, it, expect } from "vitest";
 import {
+  ANNOUNCEMENT_HOURS_ON_HOME,
   CARDS_PER_ROUND,
+  currentAnnouncements,
   teamsSignature,
   playingHandicap,
   shotsOnHole,
@@ -635,5 +637,39 @@ describe("the tee draw order and scorers", () => {
 
   it("only ever nominates someone playing in that group", () => {
     for (const g of defaultTeeGroups()) expect(g.playerIds).toContain(g.scorerId);
+  });
+});
+
+describe("announcements on Home", () => {
+  const now = new Date("2026-09-08T12:00:00+01:00");
+  const at = (hoursAgo: number) => new Date(now.getTime() - hoursAgo * 3600_000).toISOString();
+
+  it("shows recent ones, newest first", () => {
+    const rows = currentAnnouncements(
+      [{ id: "old", at: at(5) }, { id: "new", at: at(1) }], now);
+    expect(rows.map((r) => r.id)).toEqual(["new", "old"]);
+  });
+
+  it("drops anything older than the window", () => {
+    const rows = currentAnnouncements(
+      [{ id: "fresh", at: at(1) }, { id: "stale", at: at(ANNOUNCEMENT_HOURS_ON_HOME + 1) }], now);
+    expect(rows.map((r) => r.id)).toEqual(["fresh"]);
+  });
+
+  it("caps how many shout at once", () => {
+    const rows = currentAnnouncements(
+      [{ id: "a", at: at(1) }, { id: "b", at: at(2) }, { id: "c", at: at(3) }], now);
+    expect(rows.length).toBe(2);
+    expect(rows.map((r) => r.id)).toEqual(["a", "b"]);
+  });
+
+  it("never throws on a malformed timestamp", () => {
+    expect(currentAnnouncements([{ id: "bad", at: "not a date" }], now)).toEqual([]);
+  });
+
+  it("keeps the pick-up notice up for the whole run-in to travel day", () => {
+    const posted = "2026-09-06T16:17:00+01:00"; // Sarah's coach change
+    const travelMorning = new Date("2026-09-07T07:30:00+01:00");
+    expect(currentAnnouncements([{ id: "coach", at: posted }], travelMorning).length).toBe(1);
   });
 });

@@ -2,8 +2,8 @@ import { useNavigate } from "react-router-dom";
 import { useEvent } from "../store/store";
 import { COACH, coachVisible } from "../data/belek-cup-2026";
 import { Shield } from "../components/Shield";
-import { cardGross, formatGross } from "../domain/scoring";
-import { daysUntil, formatKicker } from "../lib/format";
+import { cardGross, formatGross, currentAnnouncements } from "../domain/scoring";
+import { daysUntil, formatKicker, formatTime } from "../lib/format";
 
 // Home always answers "what is happening now". It has three shapes, chosen by the state
 // of the rounds: the pre-trip cover, the round-day single job, and the sealed evening.
@@ -102,6 +102,16 @@ function PreTrip({ days }: { days: number }) {
           <div className="phcp">{formatKicker(f.date)} · {f.depart}</div>
         </div>
       </div>
+
+      {currentAnnouncements(ev.announcements).map((a) => (
+        <div key={a.id} className="banner banner-gold" style={{ textAlign: "left" }}>
+          <strong>{a.title}</strong>
+          <div style={{ marginTop: 4 }}>{a.body}</div>
+          <div className="phcp" style={{ marginTop: 6 }}>
+            {ev.getPlayer(a.by)?.name} · {formatTime(a.at)}
+          </div>
+        </div>
+      ))}
 
       {coachVisible() && (
         <>
