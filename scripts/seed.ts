@@ -94,10 +94,20 @@ async function main() {
     id: c.id, event_id: EVENT.id, name: c.name, type: c.type, gender: c.gender ?? null, counting_rounds: c.countingRounds ?? null,
   })));
 
+  // Round status is live state, not seed data. Re-seeding mid-trip must not knock a round
+  // that is being scored — or worse, one already declared — back to "upcoming" and empty
+  // the standings. Keep whatever the database already says for rounds that exist.
+  const { data: liveRounds, error: roundsReadError } = await db.from("rounds").select("id,status");
+  if (roundsReadError) throw new Error(`rounds read: ${roundsReadError.message}`);
+  const liveStatus = new Map((liveRounds ?? []).map((r) => [r.id as string, r.status as string]));
   await upsert("rounds", ROUNDS.map((r) => ({
     id: r.id, event_id: EVENT.id, number: r.number, course_id: r.courseId, date: r.date,
-    tee_window: r.teeWindow, status: r.status, sealed_until_ceremony: r.sealedUntilCeremony ?? false,
+    tee_window: r.teeWindow, status: liveStatus.get(r.id) ?? r.status,
+    sealed_until_ceremony: r.sealedUntilCeremony ?? false,
   })));
+  for (const [id, status] of liveStatus) {
+    if (status !== "upcoming") console.log(`  · kept ${id} at "${status}"`);
+  }
 
   const groups = defaultTeeGroups();
   await upsert("tee_groups", groups.map((g) => ({ id: g.id, round_id: g.roundId, name: g.name, scorer_id: g.scorerId })));
