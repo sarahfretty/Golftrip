@@ -166,7 +166,7 @@ function RoundDay() {
       <div className="row row-strong">
         <div>
           <div className="phcp" style={{ color: "var(--teal-500)" }}>Round {round.number} · {course?.name}</div>
-          <div className="stat-big" style={{ marginTop: 6 }}>{ph ?? "—"} <span className="phcp">shots today</span></div>
+          <div className="stat-big" style={{ marginTop: 6 }}>{ph ?? "—"} <span className="phcp">shots received</span></div>
         </div>
         <div style={{ textAlign: "right" }}>
           <div className="phcp">Tee</div>
@@ -176,7 +176,12 @@ function RoundDay() {
 
       {group && (
         <>
-          <div className="sec"><div className="sec-label">Your group · {group.name}</div></div>
+          <div className="sec">
+            <div className="spread">
+              <div className="sec-label">Your group · {group.name}</div>
+              <div className="sec-label">Shots</div>
+            </div>
+          </div>
           <div className="rows">
             {group.playerIds.map((pid) => {
               const p = ev.getPlayer(pid);
