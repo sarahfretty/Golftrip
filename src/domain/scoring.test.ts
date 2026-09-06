@@ -498,7 +498,7 @@ describe("every round counts", () => {
 describe("the travel-day coach notice", () => {
   it("shows in the run-up and the morning of travel day", () => {
     expect(coachVisible(new Date("2026-08-31T09:00:00+01:00"))).toBe(true);
-    expect(coachVisible(new Date("2026-09-07T08:30:00+01:00"))).toBe(true); // before the first pick-up
+    expect(coachVisible(new Date("2026-09-07T07:45:00+01:00"))).toBe(true); // before the first pick-up
     expect(coachVisible(new Date("2026-09-07T09:59:00+01:00"))).toBe(true);
   });
 
@@ -510,7 +510,7 @@ describe("the travel-day coach notice", () => {
 
   it("clears before the flight leaves and after the last pick-up", () => {
     const hide = new Date(COACH.hideAfter).getTime();
-    expect(hide).toBeGreaterThan(new Date("2026-09-07T09:10:00+01:00").getTime());
+    expect(hide).toBeGreaterThan(new Date("2026-09-07T08:25:00+01:00").getTime()); // last pick-up
     expect(hide).toBeLessThan(new Date(`${EVENT.flights.out.date}T${EVENT.flights.out.depart}:00+01:00`).getTime());
   });
 
@@ -518,6 +518,7 @@ describe("the travel-day coach notice", () => {
     expect(COACH.stops.map((s) => s.place)).toEqual([
       "Wheatley Golf Club", "Sprotbrough, Ivanhoe", "Cadeby Village",
     ]);
+    expect(COACH.stops.map((s) => s.time)).toEqual(["8.00", "8.15", "8.25"]);
   });
 });
 
