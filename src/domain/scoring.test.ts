@@ -27,22 +27,24 @@ function teeFor(course: Course, player: Player): TeeSet {
   return set;
 }
 
-describe("playing handicaps reproduce the club-validated table (courses.md, 1 Aug 2026)", () => {
-  // [national, carya, montgomerie] — the numbers the app must use.
+describe("playing handicaps for the final indexes (7 Sep 2026)", () => {
+  // [national, carya, montgomerie]. The FORMULA is the one validated against the club's
+  // table in data/courses.md; these numbers are what it produces from the indexes the
+  // organisers confirmed on travel day, which supersede the ones in that document.
   const EXPECTED: Record<string, [number, number, number]> = {
     martin: [3, 4, 3],
-    mark: [6, 7, 5],
-    paul: [7, 8, 7],
+    mark: [6, 6, 5],
+    paul: [7, 8, 6],
     sarah: [12, 10, 10],
     jim: [12, 12, 11],
-    jane: [15, 13, 13],
+    jane: [14, 13, 13],
     chris: [14, 15, 13],
-    nicky: [18, 16, 16],
-    kathy: [25, 23, 24],
+    nicky: [17, 15, 15],
+    kathy: [26, 24, 24],
     "jo-irving": [26, 24, 25],
-    debs: [29, 27, 27],
-    "jo-campbell": [40, 38, 39],
-    catherine: [49, 47, 48],
+    debs: [28, 26, 26],
+    "jo-campbell": [39, 36, 37],
+    catherine: [44, 41, 42],
   };
 
   const byId = (id: string) => PLAYERS.find((p) => p.id === id)!;
@@ -271,7 +273,7 @@ describe("who counts and who plays", () => {
 
   it("Catherine plays and her card now counts, off 45", () => {
     const catherine = byId("catherine");
-    expect(catherine.index).toBe(45.0);
+    expect(catherine.index).toBe(39.7);
     expect(catherine.competing).toBe(true);
     expect(catherine.indexProvisional).toBeUndefined(); // 45 confirmed 31 Aug 2026
     expect(PLAYING.map((p) => p.id)).toContain("catherine");
