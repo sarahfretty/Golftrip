@@ -182,9 +182,9 @@ export const ROUNDS: Round[] = [
 export const COACH = {
   hideAfter: "2026-09-07T10:00:00+01:00", // 10am UK time on travel day
   stops: [
-    { time: "8.00", place: "Wheatley Golf Club" },
+    { time: "8.00", place: "Cadeby Village" },
     { time: "8.15", place: "Sprotbrough, Ivanhoe" },
-    { time: "8.25", place: "Cadeby Village" },
+    { time: "8.25", place: "Wheatley Golf Club" },
   ],
 } as const;
 

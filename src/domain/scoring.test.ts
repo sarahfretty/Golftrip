@@ -518,7 +518,7 @@ describe("the travel-day coach notice", () => {
 
   it("lists the three pick-ups in order", () => {
     expect(COACH.stops.map((s) => s.place)).toEqual([
-      "Wheatley Golf Club", "Sprotbrough, Ivanhoe", "Cadeby Village",
+      "Cadeby Village", "Sprotbrough, Ivanhoe", "Wheatley Golf Club",
     ]);
     expect(COACH.stops.map((s) => s.time)).toEqual(["8.00", "8.15", "8.25"]);
   });

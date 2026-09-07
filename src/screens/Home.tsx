@@ -95,7 +95,7 @@ function PreTrip({ days }: { days: number }) {
       <div className="row row-strong">
         <div>
           <div className="phcp" style={{ color: "var(--teal-500)" }}>We fly in</div>
-          <div className="stat-big" style={{ marginTop: 6 }}>{days > 0 ? `${days} days` : "This week"}</div>
+          <div className="stat-big" style={{ marginTop: 6 }}>{days > 1 ? `${days} days` : days === 1 ? "Tomorrow" : days === 0 ? "Today" : "This week"}</div>
         </div>
         <div style={{ textAlign: "right" }}>
           <div className="pname">{f.from} → {f.to}</div>
