@@ -14,5 +14,6 @@ drop policy if exists side_prizes_public_insert on side_prizes;
 drop policy if exists side_prizes_public_update on side_prizes;
 drop policy if exists corrections_public_insert on corrections;
 drop policy if exists announcements_public_insert on announcements;
+drop policy if exists announcements_public_delete on announcements;
 
 notify pgrst, 'reload schema';

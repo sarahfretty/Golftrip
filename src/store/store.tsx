@@ -208,6 +208,7 @@ export interface EventContextValue {
   setTeams: (teams: Team[]) => void;
   setTeamsRevealed: (revealed: boolean) => void;
   addAnnouncement: (title: string, body: string, by: string) => void;
+  removeAnnouncement: (id: string) => void;
   resetAll: () => void;
 }
 
@@ -475,6 +476,11 @@ export function EventProvider({ children }: { children: ReactNode }) {
     push(() => remote.addAnnouncement(title, body, by));
   }, [push]);
 
+  const removeAnnouncement = useCallback((id: string) => {
+    setState((s) => ({ ...s, announcements: s.announcements.filter((a) => a.id !== id) }));
+    push(() => remote.removeAnnouncement(id));
+  }, [push]);
+
   const resetAll = useCallback(() => {
     if (isSupabaseConfigured) {
       // Shared data: resync from the database rather than blowing it away from one phone.
@@ -523,13 +529,14 @@ export function EventProvider({ children }: { children: ReactNode }) {
       setTeams,
       setTeamsRevealed,
       addAnnouncement,
+      removeAnnouncement,
       resetAll,
     }),
     [
       state, currentPlayerId, isOrganiser, getPlayer, getCourse, teeFor, playingHandicapFor,
       cardFor, groupsForRound, groupForPlayer, pointsFor, shotsFor, orderOfMeritFor, teamCup,
       selectPlayer, loginOrganiser, logoutOrganiser, setStroke, signCard, correctStroke,
-      setRoundStatus, setSidePrize, setGroupScorer, setTeams, setTeamsRevealed, addAnnouncement, resetAll,
+      setRoundStatus, setSidePrize, setGroupScorer, setTeams, setTeamsRevealed, addAnnouncement, removeAnnouncement, resetAll,
     ],
   );
 

@@ -227,6 +227,11 @@ export async function addAnnouncement(title: string, body: string, by: string) {
   if (error) throw new Error(`announcements: ${error.message}`);
 }
 
+export async function removeAnnouncement(id: string) {
+  const { error } = await client().from("announcements").delete().eq("id", Number(id));
+  if (error) throw new Error(`announcements delete: ${error.message}`);
+}
+
 // ── Realtime ─────────────────────────────────────────────────────────────────
 
 /**

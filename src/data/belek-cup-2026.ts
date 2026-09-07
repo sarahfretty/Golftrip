@@ -225,31 +225,41 @@ type RoundDraw = { threes: [DrawGroup, DrawGroup]; four: DrawGroup };
 /** The locked ladies' group. Always the last group out, every round. */
 const LOCKED_GROUP_PLAYERS = ["kathy", "debs", "catherine"];
 
-/** Its scorer rotates too — the same person shouldn't mark every day. */
-const LOCKED_GROUP_SCORER: Record<string, string> = { r1: "debs", r2: "kathy", r3: "catherine" };
+/**
+ * Players the organisers would rather not have marking a card (7 Sep 2026). The draw's
+ * scorer choices are checked against this in the tests.
+ *
+ * The locked group is the one place it cannot be honoured and rotated at the same time:
+ * it is Kathy, Debs and Catherine, two of whom are on this list, so Catherine marks it
+ * every round rather than handing a card to someone the organisers would rather not.
+ */
+export const SCORERS_TO_AVOID = ["martin", "chris", "kathy", "debs", "jim"];
+
+/** Catherine every round — see SCORERS_TO_AVOID for why this one cannot rotate. */
+const LOCKED_GROUP_SCORER: Record<string, string> = { r1: "catherine", r2: "catherine", r3: "catherine" };
 
 
 const DRAWS: Record<string, RoundDraw> = {
   r1: {
     threes: [
-      { name: "", playerIds: ["martin", "nicky", "paul"], scorerId: "martin" },
-      { name: "", playerIds: ["mark", "jo-irving", "jane"], scorerId: "jane" },
+      { name: "", playerIds: ["martin", "nicky", "paul"], scorerId: "nicky" },
+      { name: "", playerIds: ["mark", "jo-irving", "jane"], scorerId: "mark" },
     ],
-    four: { name: "", playerIds: ["jim", "sarah", "chris", "jo-campbell"], scorerId: "jim" },
+    four: { name: "", playerIds: ["jim", "sarah", "chris", "jo-campbell"], scorerId: "sarah" },
   },
   r2: {
     threes: [
       { name: "", playerIds: ["paul", "sarah", "mark"], scorerId: "paul" },
-      { name: "", playerIds: ["chris", "jo-irving", "nicky"], scorerId: "chris" },
+      { name: "", playerIds: ["chris", "jo-irving", "nicky"], scorerId: "jo-irving" },
     ],
     four: { name: "", playerIds: ["jim", "jane", "martin", "jo-campbell"], scorerId: "jo-campbell" },
   },
   r3: {
     threes: [
-      { name: "", playerIds: ["mark", "nicky", "jim"], scorerId: "nicky" },
-      { name: "", playerIds: ["paul", "jo-irving", "jo-campbell"], scorerId: "jo-irving" },
+      { name: "", playerIds: ["mark", "nicky", "jim"], scorerId: "mark" },
+      { name: "", playerIds: ["paul", "jo-irving", "jo-campbell"], scorerId: "paul" },
     ],
-    four: { name: "", playerIds: ["martin", "sarah", "chris", "jane"], scorerId: "sarah" },
+    four: { name: "", playerIds: ["martin", "sarah", "chris", "jane"], scorerId: "jane" },
   },
 };
 

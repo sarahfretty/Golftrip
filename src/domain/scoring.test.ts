@@ -18,7 +18,7 @@ import {
   validateHoles,
   validateTeams,
 } from "./scoring";
-import { COACH, coachVisible, COMPETITIONS, COUPLES, COURSES, EVENT, PLAYERS, PLAYING, ROUNDS, TEAMS, TEAMS_REVEALED, LOCKED_GROUP_IDS, defaultTeeGroups } from "../data/belek-cup-2026";
+import { COACH, coachVisible, COMPETITIONS, COUPLES, COURSES, EVENT, PLAYERS, PLAYING, ROUNDS, SCORERS_TO_AVOID, TEAMS, TEAMS_REVEALED, LOCKED_GROUP_IDS, defaultTeeGroups } from "../data/belek-cup-2026";
 import type { Course, Player, TeeSet } from "./types";
 
 function teeFor(course: Course, player: Player): TeeSet {
@@ -621,20 +621,29 @@ describe("the tee draw order and scorers", () => {
     }
   });
 
-  it("gives every group a different scorer each round — nobody marks twice", () => {
+  it("never asks anyone the organisers would rather not have marking", () => {
     const scorers = ROUNDS.flatMap((r) => groupsOf(r.id).map((g) => g.scorerId));
     expect(scorers.length).toBe(12); // four groups, three rounds
-    expect(new Set(scorers).size).toBe(scorers.length);
+    for (const id of scorers) expect(SCORERS_TO_AVOID).not.toContain(id);
   });
 
-  it("rotates the threeball's own scorer too", () => {
-    // The locked group is no longer last, so find it by membership.
+  it("changes the scorer every round in every group it can", () => {
+    // Group 3 is the exception: it is Kathy, Debs and Catherine, and two of them are on
+    // the avoid list, so Catherine marks it every round. Everywhere else must rotate.
+    for (const position of [0, 1, 3]) {
+      const perRound = ROUNDS.map((r) => groupsOf(r.id)[position].scorerId);
+      expect(new Set(perRound).size).toBe(ROUNDS.length);
+    }
+  });
+
+  it("leaves the locked group with the only scorer it is allowed", () => {
     const theirs = ROUNDS.map((r) => {
       const g = groupsOf(r.id).find((x) => LOCKED_GROUP_IDS.every((id: string) => x.playerIds.includes(id)))!;
       return g.scorerId;
     });
-    expect(new Set(theirs).size).toBe(ROUNDS.length);
-    for (const id of theirs) expect(LOCKED_GROUP_IDS).toContain(id);
+    const allowed = (LOCKED_GROUP_IDS as readonly string[]).filter((id) => !SCORERS_TO_AVOID.includes(id));
+    expect(allowed).toEqual(["catherine"]);
+    for (const id of theirs) expect(id).toBe("catherine");
   });
 
   it("only ever nominates someone playing in that group", () => {

@@ -341,6 +341,26 @@ function AnnouncementControl() {
         <textarea className="input" style={{ minHeight: 80, padding: 12 }} placeholder="Message" value={body} onChange={(e) => setBody(e.target.value)} />
         <button className="btn" disabled={!title.trim()} onClick={post}><span>Post announcement</span><span aria-hidden>→</span></button>
       </div>
+
+      {ev.announcements.length > 0 && (
+        <div className="rows">
+          {ev.announcements.map((a) => (
+            <div key={a.id} className="row" style={{ alignItems: "flex-start" }}>
+              <div style={{ paddingRight: 12 }}>
+                <div className="pname">{a.title}</div>
+                <div className="phcp" style={{ paddingTop: 2 }}>{a.body}</div>
+              </div>
+              <button
+                className="btn-ghost"
+                style={{ width: "auto", padding: "8px 14px", borderColor: "var(--color-danger)", color: "var(--color-danger)" }}
+                onClick={() => { if (confirm(`Delete "${a.title}"? Everyone loses it immediately.`)) ev.removeAnnouncement(a.id); }}
+              >
+                Delete
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
     </>
   );
 }
