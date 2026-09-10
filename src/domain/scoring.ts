@@ -292,6 +292,38 @@ export function currentAnnouncements<T extends { at: string }>(
     .slice(0, max);
 }
 
+// ── Opening a round ──────────────────────────────────────────────────────────
+
+/** The device's own calendar date as YYYY-MM-DD, to compare against a round's date. */
+export function localDate(now: Date = new Date()): string {
+  const pad = (n: number) => String(n).padStart(2, "0");
+  return `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`;
+}
+
+/**
+ * The round that should open itself for scoring, if any.
+ *
+ * Round one was played and never recorded because nobody remembered to set it to Scoring,
+ * and the app gave no clue why there was no card — so the app now does it. Deliberately
+ * narrow:
+ *
+ *   * only ever `upcoming` → `scoring`, never any other transition, so a declared or
+ *     sealed round can never be reopened by a phone with a confused clock;
+ *   * only on the round's own date, by the device's local calendar;
+ *   * never while another round is already being scored.
+ *
+ * Declaring stays manual: that is a judgement about whether the cards are all in, and no
+ * clock can make it.
+ */
+export function roundToAutoOpen<T extends { id: string; date: string; status: string }>(
+  rounds: T[],
+  now: Date = new Date(),
+): T | null {
+  if (rounds.some((r) => r.status === "scoring")) return null;
+  const today = localDate(now);
+  return rounds.find((r) => r.status === "upcoming" && r.date === today) ?? null;
+}
+
 // ── Validation ─────────────────────────────────────────────────────────────
 // A single wrong stroke index makes the leaderboard quietly wrong all week, so
 // course data is validated before it is ever used.

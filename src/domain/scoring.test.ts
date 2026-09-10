@@ -3,6 +3,8 @@ import {
   ANNOUNCEMENT_HOURS_ON_HOME,
   CARDS_PER_ROUND,
   currentAnnouncements,
+  localDate,
+  roundToAutoOpen,
   teamsSignature,
   playingHandicap,
   shotsOnHole,
@@ -682,5 +684,43 @@ describe("announcements on Home", () => {
     const posted = "2026-09-06T16:17:00+01:00"; // Sarah's coach change
     const travelMorning = new Date("2026-09-07T07:30:00+01:00");
     expect(currentAnnouncements([{ id: "coach", at: posted }], travelMorning).length).toBe(1);
+  });
+});
+
+describe("a round opens itself on its own date", () => {
+  const R = (id: string, date: string, status: string) => ({ id, date, status });
+  const carya = new Date("2026-09-10T07:00:00+03:00"); // morning of round two, in Turkey
+
+  it("opens the round whose date is today", () => {
+    const rounds = [R("r1", "2026-09-08", "declared"), R("r2", "2026-09-10", "upcoming"), R("r3", "2026-09-12", "upcoming")];
+    expect(roundToAutoOpen(rounds, carya)?.id).toBe("r2");
+  });
+
+  it("does nothing on a day with no round", () => {
+    const rounds = [R("r2", "2026-09-10", "upcoming"), R("r3", "2026-09-12", "upcoming")];
+    expect(roundToAutoOpen(rounds, new Date("2026-09-11T09:00:00+03:00"))).toBeNull();
+  });
+
+  it("never reopens a round that has been declared, sealed or locked", () => {
+    for (const status of ["declared", "sealed", "locked"]) {
+      expect(roundToAutoOpen([R("r2", "2026-09-10", status)], carya)).toBeNull();
+    }
+  });
+
+  it("will not open a second round while one is being scored", () => {
+    const rounds = [R("r2", "2026-09-10", "scoring"), R("r3", "2026-09-10", "upcoming")];
+    expect(roundToAutoOpen(rounds, carya)).toBeNull();
+  });
+
+  it("does not jump the gun the day before", () => {
+    const rounds = [R("r3", "2026-09-12", "upcoming")];
+    expect(roundToAutoOpen(rounds, new Date("2026-09-11T23:30:00+03:00"))).toBeNull();
+    expect(roundToAutoOpen(rounds, new Date("2026-09-12T00:05:00+03:00"))?.id).toBe("r3");
+  });
+
+  it("reads the date from the device's own calendar", () => {
+    expect(localDate(new Date("2026-09-12T00:05:00+03:00"))).toBe(localDate(new Date("2026-09-12T00:05:00+03:00")));
+    const d = new Date(2026, 8, 12, 9, 0, 0); // local 12 Sep whatever the zone
+    expect(localDate(d)).toBe("2026-09-12");
   });
 });

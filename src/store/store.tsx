@@ -57,6 +57,7 @@ import {
   type StandingRow,
   type TeamStandingRow,
 } from "../domain/scoring";
+import { roundToAutoOpen } from "../domain/scoring";
 import { isSupabaseConfigured } from "../lib/supabase";
 import * as remote from "./remote";
 
@@ -222,13 +223,28 @@ export function EventProvider({ children }: { children: ReactNode }) {
   stateRef.current = state;
 
   // Load the shared state, then follow it live.
+  // One attempt per round per session: opening it triggers a realtime refetch, which
+  // would otherwise come straight back through here.
+  const autoOpened = useRef<string | null>(null);
+
   useEffect(() => {
     if (!isSupabaseConfigured) return;
     let alive = true;
     const pull = () => {
       remote
         .fetchState()
-        .then((next) => { if (alive) setState(next); })
+        .then((next) => {
+          if (!alive) return;
+          setState(next);
+          // A round opens itself on its own date — see roundToAutoOpen for why.
+          const due = roundToAutoOpen(next.rounds);
+          if (due && autoOpened.current !== due.id) {
+            autoOpened.current = due.id;
+            remote
+              .setRoundStatus(due.id, "scoring")
+              .catch((e) => console.error("[golftrips] auto-open failed", e));
+          }
+        })
         .catch((e) => console.error("[golftrips] load failed", e));
     };
     pull();
